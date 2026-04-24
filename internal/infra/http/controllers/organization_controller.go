@@ -26,18 +26,21 @@ func (c OrganizationController) Save() http.HandlerFunc {
 		if err != nil {
 			log.Printf("OrganizationController.Save(requests.Bind): %s", err)
 			BadRequest(w, err)
-			return 
+			return
 		}
 
 		user := r.Context().Value(UserKey).(domain.User)
 		org.UserId = user.Id
 
 		org, err = c.orgService.Save(org)
-		if err != nil{
+		if err != nil {
 			log.Printf("OrganizationController.Save(c.orgService.Save): %s", err)
 			InternalServerError(w, err)
-			return 
+			return
 		}
-		Success(w, resources.UserDto{}.DomainToDto(user))
+
+		orgDto := resources.OrganizationDto{}
+		orgDto = orgDto.DomainToDto(org)
+		Success(w, orgDto)
 	}
 }
