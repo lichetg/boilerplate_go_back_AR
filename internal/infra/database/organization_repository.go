@@ -18,9 +18,9 @@ type organization struct {
 	Address     string     `db:"address"`
 	Lat         float64    `db:"lat"`
 	Lon         float64    `db:"lon"`
-	CreatedDate time.Time  `db:"created_time"`
-	UpdatedDate time.Time  `db:"updated_time"`
-	DeletedDate *time.Time `db:"deleted_time"`
+	CreatedDate time.Time  `db:"created_date"`
+	UpdatedDate time.Time  `db:"updated_date"`
+	DeletedDate *time.Time `db:"deleted_date"`
 }
 
 type organizationRepository struct {
