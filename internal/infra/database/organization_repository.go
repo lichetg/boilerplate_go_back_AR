@@ -30,6 +30,7 @@ type organizationRepository struct {
 
 type OrganizationRepository interface {
 	Save(o domain.Organization) (domain.Organization, error)
+	FindList(uId uint64) ([]domain.Organization, error)
 }
 
 func NewOrganizationRepository(session db.Session) OrganizationRepository {
@@ -52,6 +53,23 @@ func (r organizationRepository) Save(o domain.Organization) (domain.Organization
 
 	o = r.mapModelToDomain(org)
 	return o, nil
+}
+
+func (r organizationRepository) FindList(uId uint64) ([]domain.Organization, error) {
+	var orgs []organization
+
+	err := r.coll.
+		Find(db.Cond{
+			"user_id":      uId,
+			"deleted_date": nil,
+		}).
+		All(&orgs)
+	if err != nil {
+		return nil, err
+	}
+
+	organizations := r.mapModelToDomainCollection(orgs)
+	return organizations, nil
 }
 
 func (r organizationRepository) mapDomainToModel(o domain.Organization) organization {
@@ -85,4 +103,12 @@ func (r organizationRepository) mapModelToDomain(o organization) domain.Organiza
 		UpdatedDate: o.UpdatedDate,
 		DeletedDate: o.DeletedDate,
 	}
+}
+
+func (r organizationRepository) mapModelToDomainCollection(orgs []organization) []domain.Organization {
+	organizations := make([]domain.Organization, len(orgs))
+	for i, _ := range orgs {
+		organizations[i] = r.mapModelToDomain(orgs[i])
+	}
+	return organizations
 }

@@ -29,3 +29,13 @@ func (s organizationService) Save(o domain.Organization) (domain.Organization, e
 
 	return org, nil
 }
+
+func (s organizationService) FindList(uId uint64) ([]domain.Organization, error) {
+	orgs, err := s.orgRepo.FindList(uId)
+	if err != nil {
+		log.Printf("organizationService.FindList(s.orgRepo.FindList): %s", err)
+		return nil, err
+	}
+
+	return orgs, nil
+}
