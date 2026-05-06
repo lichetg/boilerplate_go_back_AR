@@ -12,6 +12,7 @@ type organizationService struct {
 
 type OrganizationService interface {
 	Save(o domain.Organization) (domain.Organization, error)
+	FindList(uId uint64) ([]domain.Organization, error)
 }
 
 func NewOrganizationService(or database.OrganizationRepository) OrganizationService {

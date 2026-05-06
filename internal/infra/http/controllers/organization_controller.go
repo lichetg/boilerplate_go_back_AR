@@ -44,3 +44,18 @@ func (c OrganizationController) Save() http.HandlerFunc {
 		Success(w, orgDto)
 	}
 }
+
+func (c OrganizationController) FindList() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := r.Context().Value(UserKey).(domain.User)
+
+		orgs, err := c.orgService.FindList(user.Id)
+		if err != nil {
+			log.Printf("OrganizationController.FindList(c.orgService.FindList): %s", err)
+			InternalServerError(w, err)
+			return
+		}
+
+		Success(w, resources.OrganizationDto{}.DomainToDtoCollection(orgs))
+	}
+}

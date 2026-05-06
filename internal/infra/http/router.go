@@ -105,6 +105,7 @@ func UserRouter(r chi.Router, uc controllers.UserController) {
 func OrganizationRouter(r chi.Router, oc controllers.OrganizationController) {
 	r.Route("/organizations", func(apiRouter chi.Router) {
 		apiRouter.Post("/", oc.Save())
+		apiRouter.Get("/", oc.FindList())
 	})
 }
 
