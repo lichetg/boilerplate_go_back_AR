@@ -10,7 +10,7 @@ import (
 const OrganizationTableName = "organizations"
 
 type organization struct {
-	Id          uint64     `db:"id,omiempty"`
+	Id          uint64     `db:"id,omitempty"`
 	UserId      uint64     `db:"user_id"`
 	Name        string     `db:"name"`
 	Description *string    `db:"description"`
@@ -31,6 +31,7 @@ type organizationRepository struct {
 type OrganizationRepository interface {
 	Save(o domain.Organization) (domain.Organization, error)
 	FindList(uId uint64) ([]domain.Organization, error)
+	Find(id uint64) (domain.Organization, error)
 }
 
 func NewOrganizationRepository(session db.Session) OrganizationRepository {
@@ -70,6 +71,18 @@ func (r organizationRepository) FindList(uId uint64) ([]domain.Organization, err
 
 	organizations := r.mapModelToDomainCollection(orgs)
 	return organizations, nil
+}
+
+func (r organizationRepository) Find(id uint64) (domain.Organization, error) {
+	var org organization
+
+	err:= r.coll.Find(db.Cond{"id": id, "deleted_date": nil}).One(&org)
+	if err != nil {
+		return domain.Organization{}, err
+	}
+
+	o := r.mapModelToDomain(org)
+	return o , nil
 }
 
 func (r organizationRepository) mapDomainToModel(o domain.Organization) organization {

@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"log"
 	"net/http"
 
@@ -57,5 +58,19 @@ func (c OrganizationController) FindList() http.HandlerFunc {
 		}
 
 		Success(w, resources.OrganizationDto{}.DomainToDtoCollection(orgs))
+	}
+}
+
+func (c OrganizationController) Find() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := r.Context().Value(UserKey).(domain.User)
+		org := r.Context().Value(OrgKey).(domain.Organization)
+
+		if user.Id != org.UserId{
+			Forbidden(w, errors.New("access denied"))
+			return 
+		}
+
+		Success(w, resources.OrganizationDto{}.DomainToDto(org))
 	}
 }

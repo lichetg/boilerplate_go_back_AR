@@ -13,6 +13,7 @@ type organizationService struct {
 type OrganizationService interface {
 	Save(o domain.Organization) (domain.Organization, error)
 	FindList(uId uint64) ([]domain.Organization, error)
+	Find(id uint64) (interface{}, error)
 }
 
 func NewOrganizationService(or database.OrganizationRepository) OrganizationService {
@@ -39,4 +40,14 @@ func (s organizationService) FindList(uId uint64) ([]domain.Organization, error)
 	}
 
 	return orgs, nil
+}
+
+func (s organizationService) Find(id uint64) (interface{}, error) {
+	org, err := s.orgRepo.Find(id)
+	if err != nil {
+		log.Printf("organizationService.Find(s.orgRepo.Find): %s", err)
+		return nil, err
+	}
+
+	return org, nil
 }
