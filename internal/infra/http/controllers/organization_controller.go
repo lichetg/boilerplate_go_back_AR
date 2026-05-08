@@ -74,3 +74,31 @@ func (c OrganizationController) Find() http.HandlerFunc {
 		Success(w, resources.OrganizationDto{}.DomainToDto(org))
 	}
 }
+
+func (c OrganizationController) Update() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := r.Context().Value(UserKey).(domain.User)
+		org := r.Context().Value(OrgKey).(domain.Organization)
+
+		if user.Id != org.UserId{
+			Forbidden(w, errors.New("access denied"))
+			return 
+		}
+
+		newOrg, err := requests.Bind(r, requests.OrganizationRequest{}, domain.Organization{})
+		if err != nil {
+			log.Printf("OrganizationController.Update(requests.Update): %s", err)
+			BadRequest(w, err)
+			return
+		}
+
+		org.Name = newOrg.Name
+		org.Description = newOrg.Description
+		org.City = newOrg.City
+		org.Address = newOrg.Address
+		org.Lat = newOrg.Lat
+		org.Lon = newOrg.Lon
+
+		Success(w, resources.OrganizationDto{}.DomainToDto(org))
+	}
+}
