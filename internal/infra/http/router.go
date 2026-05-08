@@ -113,6 +113,8 @@ func OrganizationRouter(r chi.Router, oc controllers.OrganizationController, os 
 		apiRouter.Post("/", oc.Save())
 		apiRouter.Get("/", oc.FindList())
 		apiRouter.With(opom).Get("/{orgId}", oc.Find())
+		apiRouter.With(opom).Put("/{orgId}", oc.Update())
+		apiRouter.With(opom).Delete("/{orgId}", oc.Delete())
 	})
 }
 
