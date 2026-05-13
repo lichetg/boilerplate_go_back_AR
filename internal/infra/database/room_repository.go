@@ -22,6 +22,8 @@ type room struct {
 type RoomRepository interface {
 	Save(o domain.Room) (domain.Room, error)
 	FindByOrgId(oId uint64) ([]domain.Room, error)
+	Update(o domain.Room) (domain.Room, error)
+	Delete(oId uint64) error
 }
 
 type roomRepository struct {
@@ -51,20 +53,37 @@ func (r roomRepository) Save(o domain.Room) (domain.Room, error) {
 	return o, nil
 }
 
-func(r roomRepository) FindByOrgId(oId uint64) ([]domain.Room, error){
+func (r roomRepository) FindByOrgId(oId uint64) ([]domain.Room, error) {
 	var rooms []room
 
 	err := r.coll.Find(db.Cond{
 		"organization_id": oId,
-		"deleted_date": nil,
+		"deleted_date":    nil,
 	}).All(&rooms)
 
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
-	rms :=r.mapModelToDomainCollection(rooms)
+	rms := r.mapModelToDomainCollection(rooms)
 	return rms, nil
+}
+
+func (r roomRepository) Update(o domain.Room) (domain.Room, error) {
+	room := r.mapDomainToModel(o)
+	room.UpdatedDate = time.Now()
+
+	err := r.coll.Find(db.Cond{"id": o.OrganizationId, "deleted_date": nil}).Update(&room)
+	if err != nil {
+		return domain.Room{}, err
+	}
+
+	o = r.mapModelToDomain(room)
+	return o, nil
+}
+
+func (r roomRepository) Delete(oId uint64) error {
+	return r.coll.Find(db.Cond{"organizationId": oId, "deleted_date": nil}).Update(map[string]interface{}{"deleted_date": time.Now()})
 }
 
 func (r roomRepository) mapDomainToModel(rm domain.Room) room {
