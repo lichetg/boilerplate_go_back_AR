@@ -73,7 +73,7 @@ func (r roomRepository) Update(o domain.Room) (domain.Room, error) {
 	room := r.mapDomainToModel(o)
 	room.UpdatedDate = time.Now()
 
-	err := r.coll.Find(db.Cond{"id": o.OrganizationId, "deleted_date": nil}).Update(&room)
+	err := r.coll.Find(db.Cond{"id": o.Id, "deleted_date": nil}).Update(&room)
 	if err != nil {
 		return domain.Room{}, err
 	}
