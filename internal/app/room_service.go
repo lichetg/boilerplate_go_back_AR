@@ -13,6 +13,8 @@ type roomService struct {
 
 type RoomService interface {
 	Save(o domain.Room) (domain.Room, error)
+//	FindByOrgId(uId uint64) ([]domain.Room, error)
+	Find(id uint64) (interface{}, error)
 }
 
 func NewRoomService(
@@ -32,3 +34,22 @@ func (s roomService) Save(o domain.Room) (domain.Room, error) {
 	return rm, nil
 }
 
+//func (s roomService) FindByOrgId(uId uint64) ([]domain.Room, error) {
+//	rms, err := s.roomRepo.FindByOrgId(uId)
+//	if err != nil {
+//		log.Printf("roomService.FindByOrgId(s.roomRepo.FindByOrgId): %s", err)
+//		return nil, err
+//	}
+//
+//	return rms, nil
+//}
+
+func (s roomService) Find(id uint64) (interface{}, error) {
+	rm, err := s.roomRepo.Find(id)
+	if err != nil {
+		log.Printf("roomService.Find(s.orgRepo.Find): %s", err)
+		return nil, err
+	}
+
+	return rm, nil
+}

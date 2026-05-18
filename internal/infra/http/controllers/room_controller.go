@@ -44,3 +44,33 @@ func (c RoomController) Save() http.HandlerFunc {
 		Success(w, rmDto)
 	}
 }
+
+
+//func (c RoomController) FindList() http.HandlerFunc {
+//	return func(w http.ResponseWriter, r *http.Request) {
+//		user := r.Context().Value(UserKey).(domain.User)
+//
+//		orgs, err := c.rmService.FindList(user.Id)
+//		if err != nil {
+//			log.Printf("OrganizationController.FindList(c.orgService.FindList): %s", err)
+//			InternalServerError(w, err)
+//			return
+//		}
+//
+//		Success(w, resources.OrganizationDto{}.DomainToDtoCollection(orgs))
+//	}
+//}
+
+func (c RoomController) Find() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		org := r.Context().Value(OrgKey).(domain.Organization)
+		rm := r.Context().Value(RoomKey).(domain.Room)
+
+		if org.Id != rm.OrganizationId {
+			Forbidden(w, errors.New("access denied"))
+			return
+		}
+
+		Success(w, resources.OrganizationDto{}.DomainToDto(org))
+	}
+}

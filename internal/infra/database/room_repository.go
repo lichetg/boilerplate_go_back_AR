@@ -9,7 +9,7 @@ import (
 
 const RoomsTableName = "rooms"
 
-type room struct {
+type Room struct {
 	Id             uint64     `db:"id,omitempty"`
 	OrganizationId uint64     `db:"organizationId"`
 	Name           string     `db:"name"`
@@ -22,6 +22,7 @@ type room struct {
 type RoomRepository interface {
 	Save(o domain.Room) (domain.Room, error)
 	FindByOrgId(oId uint64) ([]domain.Room, error)
+	Find(id uint64) (domain.Room, error)
 	Update(o domain.Room) (domain.Room, error)
 	Delete(oId uint64) error
 }
@@ -54,7 +55,7 @@ func (r roomRepository) Save(o domain.Room) (domain.Room, error) {
 }
 
 func (r roomRepository) FindByOrgId(oId uint64) ([]domain.Room, error) {
-	var rooms []room
+	var rooms []Room
 
 	err := r.coll.Find(db.Cond{
 		"organization_id": oId,
@@ -67,6 +68,18 @@ func (r roomRepository) FindByOrgId(oId uint64) ([]domain.Room, error) {
 
 	rms := r.mapModelToDomainCollection(rooms)
 	return rms, nil
+}
+
+func (r roomRepository) Find(id uint64) (domain.Room, error) {
+	var room Room
+
+	err := r.coll.Find(db.Cond{"id": id, "deleted_date": nil}).One(&room)
+	if err != nil {
+		return domain.Room{}, err
+	}
+
+	o := r.mapModelToDomain(room)
+	return o, nil
 }
 
 func (r roomRepository) Update(o domain.Room) (domain.Room, error) {
@@ -86,8 +99,8 @@ func (r roomRepository) Delete(oId uint64) error {
 	return r.coll.Find(db.Cond{"organizationId": oId, "deleted_date": nil}).Update(map[string]interface{}{"deleted_date": time.Now()})
 }
 
-func (r roomRepository) mapDomainToModel(rm domain.Room) room {
-	return room{
+func (r roomRepository) mapDomainToModel(rm domain.Room) Room {
+	return Room{
 		Id:             rm.Id,
 		OrganizationId: rm.OrganizationId,
 		Name:           rm.Name,
@@ -98,7 +111,7 @@ func (r roomRepository) mapDomainToModel(rm domain.Room) room {
 	}
 }
 
-func (r roomRepository) mapModelToDomain(rm room) domain.Room {
+func (r roomRepository) mapModelToDomain(rm Room) domain.Room {
 	return domain.Room{
 		Id:             rm.Id,
 		OrganizationId: rm.OrganizationId,
@@ -110,7 +123,7 @@ func (r roomRepository) mapModelToDomain(rm room) domain.Room {
 	}
 }
 
-func (r roomRepository) mapModelToDomainCollection(rooms []room) []domain.Room {
+func (r roomRepository) mapModelToDomainCollection(rooms []Room) []domain.Room {
 	rms := make([]domain.Room, len(rooms))
 	for i := range rooms {
 		rms[i] = r.mapModelToDomain(rooms[i])
