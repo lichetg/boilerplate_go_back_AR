@@ -56,6 +56,11 @@ func Router(cont container.Container) http.Handler {
 					apiRouter,
 					cont.OrganizationController,
 					cont.OrganizationService)
+				RoomRouter(
+					apiRouter,
+					cont.RoomController,
+					cont.RoomService,
+					cont.OrganizationService)
 				apiRouter.Handle("/*", NotFoundJSON())
 			})
 		})
@@ -125,7 +130,7 @@ func RoomRouter(
 	os app.OrganizationService,
 ) {
 	opom := middlewares.PathObject("orgId", controllers.OrgKey, os)
-	rpom := middlewares.PathObject("roomId", controllers.RoomKey, rs)
+	//rpom := middlewares.PathObject("roomId", controllers.RoomKey, rs)
 
 	r.Route("/organizations/{orgId}/rooms", func(roomRouter chi.Router) {
 		roomRouter.Use(opom)
@@ -134,7 +139,7 @@ func RoomRouter(
 		//roomRouter.Get("/", rc.FindList())
 
 		roomRouter.Route("/{roomId}", func(roomRouter chi.Router) {
-			roomRouter.Use(rpom)
+			//roomRouter.Use(rpom)
 
 			//roomRouter.Get("/", rc.Find())
 			//roomRouter.Put("/", rc.Update())
