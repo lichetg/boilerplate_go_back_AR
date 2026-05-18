@@ -14,9 +14,9 @@ type RoomController struct {
 	rmService app.RoomService
 }
 
-func NewRoomController(rms app.RoomService) RoomController {
+func NewRoomController(rs app.RoomService) RoomController {
 	return RoomController{
-		rmService: rms,
+		rmService: rs,
 	}
 }
 

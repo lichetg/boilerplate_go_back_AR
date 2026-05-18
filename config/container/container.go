@@ -28,12 +28,14 @@ type Services struct {
 	app.AuthService
 	app.UserService
 	app.OrganizationService
+	app.RoomService
 }
 
 type Controllers struct {
 	AuthController         controllers.AuthController
 	UserController         controllers.UserController
 	OrganizationController controllers.OrganizationController
+	RoomController         controllers.RoomController
 }
 
 func New(conf config.Configuration) Container {
@@ -48,10 +50,12 @@ func New(conf config.Configuration) Container {
 	userService := app.NewUserService(userRepository)
 	authService := app.NewAuthService(sessionRepository, userRepository, tknAuth, conf.JwtTTL)
 	organizationService := app.NewOrganizationService(organizationRepository, roomRepository)
-	
+	roomService := app.NewRoomService(roomRepository)
+
 	authController := controllers.NewAuthController(authService, userService)
 	userController := controllers.NewUserController(userService, authService)
 	organizationController := controllers.NewOrganizationController(organizationService)
+	roomController := controllers.NewRoomController(roomRepository)
 
 	authMiddleware := middlewares.AuthMiddleware(tknAuth, authService, userService)
 
@@ -63,11 +67,13 @@ func New(conf config.Configuration) Container {
 			authService,
 			userService,
 			organizationService,
+			roomService,
 		},
 		Controllers: Controllers{
 			authController,
 			userController,
 			organizationController,
+			roomController,
 		},
 	}
 }
