@@ -10,37 +10,37 @@ import (
 	"github.com/BohdanBoriak/boilerplate-go-back/internal/infra/http/resources"
 )
 
-type RoomControler struct {
+type RoomController struct {
 	rmService app.RoomService
 }
 
-func NewRoomController(rs app.RoomService) RoomController {
+func NewRoomController(rms app.RoomService) RoomController {
 	return RoomController{
-		rmService: rs,
+		rmService: rms,
 	}
 }
 
-func (c RoomControler) Save() http.HandlerFunc {
+func (c RoomController) Save() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		org, err := requests.Bind(r, requests.OrganizationRequest{}, domain.Organization{})
+		rm, err := requests.Bind(r, requests.RoomRequest{}, domain.Room{})
 		if err != nil {
-			log.Printf("OrganizationController.Save(requests.Bind): %s", err)
+			log.Printf("RoomController.Save(requests.Bind): %s", err)
 			BadRequest(w, err)
 			return
 		}
 
-		user := r.Context().Value(UserKey).(domain.User)
-		org.UserId = user.Id
+		org := r.Context().Value(OrgKey).(domain.Organization)
+		rm.OrganizationId = org.Id
 
-		org, err = c.rmService.Save(org)
+		rm, err = c.rmService.Save(rm)
 		if err != nil {
-			log.Printf("OrganizationController.Save(c.orgService.Save): %s", err)
+			log.Printf("RoomController.Save(c.rmService.Save): %s", err)
 			InternalServerError(w, err)
 			return
 		}
 
-		orgDto := resources.OrganizationDto{}
-		orgDto = orgDto.DomainToDto(org)
-		Success(w, orgDto)
+		rmDto := resources.RoomDto{}
+		rmDto = rmDto.DomainToDto(rm)
+		Success(w, rmDto)
 	}
 }
