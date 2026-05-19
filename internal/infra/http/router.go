@@ -130,7 +130,13 @@ func RoomRouter(
 	os app.OrganizationService,
 ) {
 	opom := middlewares.PathObject("orgId", controllers.OrgKey, os)
-	//rpom := middlewares.PathObject("roomId", controllers.RoomKey, rs)
+	rpom := middlewares.PathObject("roomId", controllers.RoomKey, rs)
+	//omw := middlewares.IsOwnerMiddleware[domain.Ulr]()
+
+	//apiRouter.With(upom, omw).Put(
+	//	fmt.Sprintf("/{%s}", controllers.UrlURLParam),
+	//	uc.Update(),
+	//)
 
 	r.Route("/organizations/{orgId}/rooms", func(roomRouter chi.Router) {
 		roomRouter.Use(opom)

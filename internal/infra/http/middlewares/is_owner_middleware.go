@@ -1,5 +1,6 @@
 package middlewares
 
+/*
 import (
 	"errors"
 	"log"
@@ -36,3 +37,8 @@ func IsOwnerMiddleware[domainType Userable]() func(http.Handler) http.Handler {
 		return http.HandlerFunc(hfn)
 	}
 }
+
+func (s Subscription) GetUserId() uint64 {
+	return s.UserId
+}
+*/

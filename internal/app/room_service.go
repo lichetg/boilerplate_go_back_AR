@@ -13,8 +13,9 @@ type roomService struct {
 
 type RoomService interface {
 	Save(o domain.Room) (domain.Room, error)
-//	FindByOrgId(uId uint64) ([]domain.Room, error)
 	Find(id uint64) (interface{}, error)
+	Update(o domain.Room) (domain.Room, error)
+	Delete(id uint64) error
 }
 
 func NewRoomService(
@@ -34,22 +35,32 @@ func (s roomService) Save(o domain.Room) (domain.Room, error) {
 	return rm, nil
 }
 
-//func (s roomService) FindByOrgId(uId uint64) ([]domain.Room, error) {
-//	rms, err := s.roomRepo.FindByOrgId(uId)
-//	if err != nil {
-//		log.Printf("roomService.FindByOrgId(s.roomRepo.FindByOrgId): %s", err)
-//		return nil, err
-//	}
-//
-//	return rms, nil
-//}
-
 func (s roomService) Find(id uint64) (interface{}, error) {
 	rm, err := s.roomRepo.Find(id)
 	if err != nil {
-		log.Printf("roomService.Find(s.orgRepo.Find): %s", err)
+		log.Printf("roomService.Find(s.roomRepo.Find): %s", err)
 		return nil, err
 	}
 
 	return rm, nil
+}
+
+func (s roomService) Update(o domain.Room) (domain.Room, error) {
+	room, err := s.roomRepo.Update(o)
+	if err != nil {
+		log.Printf("roomService.Update(s.roomRepo.Update): %s", err)
+		return domain.Room{}, err
+	}
+
+	return room, nil
+}
+
+func (s roomService) Delete(id uint64) error {
+	err := s.roomRepo.Delete(id)
+	if err != nil {
+		log.Printf("roomService.Delete(s.roomRepo.Delete): %s", err)
+		return err
+	}
+
+	return nil
 }

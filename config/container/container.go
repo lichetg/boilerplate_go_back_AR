@@ -55,7 +55,7 @@ func New(conf config.Configuration) Container {
 	authController := controllers.NewAuthController(authService, userService)
 	userController := controllers.NewUserController(userService, authService)
 	organizationController := controllers.NewOrganizationController(organizationService)
-	roomController := controllers.NewRoomController(roomRepository)
+	roomController := controllers.NewRoomController(roomService)
 
 	authMiddleware := middlewares.AuthMiddleware(tknAuth, authService, userService)
 

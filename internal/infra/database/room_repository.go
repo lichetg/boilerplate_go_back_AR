@@ -11,12 +11,12 @@ const RoomsTableName = "rooms"
 
 type Room struct {
 	Id             uint64     `db:"id,omitempty"`
-	OrganizationId uint64     `db:"organizationId"`
+	OrganizationId uint64     `db:"organization_id"`
 	Name           string     `db:"name"`
 	Description    *string    `db:"description"`
-	CreatedDate    time.Time  `db:"createdDate"`
-	UpdatedDate    time.Time  `db:"updatedDate"`
-	DeletedDate    *time.Time `db:"deletedDate"`
+	CreatedDate    time.Time  `db:"created_date"`
+	UpdatedDate    time.Time  `db:"updated_date"`
+	DeletedDate    *time.Time `db:"deleted_date"`
 }
 
 type RoomRepository interface {
@@ -24,7 +24,7 @@ type RoomRepository interface {
 	FindByOrgId(oId uint64) ([]domain.Room, error)
 	Find(id uint64) (domain.Room, error)
 	Update(o domain.Room) (domain.Room, error)
-	Delete(oId uint64) error
+	Delete(Id uint64) error
 }
 
 type roomRepository struct {
@@ -95,8 +95,8 @@ func (r roomRepository) Update(o domain.Room) (domain.Room, error) {
 	return o, nil
 }
 
-func (r roomRepository) Delete(oId uint64) error {
-	return r.coll.Find(db.Cond{"organizationId": oId, "deleted_date": nil}).Update(map[string]interface{}{"deleted_date": time.Now()})
+func (r roomRepository) Delete(Id uint64) error {
+	return r.coll.Find(db.Cond{"Id": Id, "deleted_date": nil}).Update(map[string]interface{}{"deleted_date": time.Now()})
 }
 
 func (r roomRepository) mapDomainToModel(rm domain.Room) Room {
