@@ -147,7 +147,7 @@ func RoomRouter(
 		roomRouter.Route("/{roomId}", func(roomRouter chi.Router) {
 			roomRouter.Use(rpom)
 
-			//roomRouter.Get("/", rc.Find())
+			roomRouter.Get("/", rc.Find())
 			//roomRouter.Put("/", rc.Update())
 			//roomRouter.Delete("/", rc.Delete())
 		})

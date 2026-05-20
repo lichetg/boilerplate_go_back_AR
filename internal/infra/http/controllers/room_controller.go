@@ -56,6 +56,6 @@ func (c RoomController) Find() http.HandlerFunc {
 			return
 		}
 
-		Success(w, resources.OrganizationDto{}.DomainToDto(org))
+		Success(w, resources.RoomDto{}.DomainToDto(rm))
 	}
 }

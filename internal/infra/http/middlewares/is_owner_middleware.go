@@ -1,9 +1,7 @@
 package middlewares
 
-/*
 import (
 	"errors"
-	"log"
 	"net/http"
 
 	"github.com/BohdanBoriak/boilerplate-go-back/internal/domain"
@@ -14,19 +12,12 @@ type Userable interface {
 	GetUserId() uint64
 }
 
-func IsOwnerMiddleware[domainType Userable]() func(http.Handler) http.Handler {
+func IsOwnerMiddleware[domainType Userable](key string, _ domainType) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		hfn := func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			userVal := ctx.Value(controllers.GetUserKey())
-			user, ok := userVal.(domain.User)
-			if !ok {
-				log.Println("IsOwnerMiddleware: no user in context or wrong type")
-				controllers.Unauthorized(w, errors.New("unauthorized"))
-				return
-			}
-			obj := controllers.GetPathValFromCtx[domainType](ctx)
-
+			user := ctx.Value(controllers.UserKey).(domain.User)
+			obj := ctx.Value(key).(domainType)
 			if obj.GetUserId() != user.Id {
 				err := errors.New("you have no access to this object")
 				controllers.Forbidden(w, err)
@@ -37,8 +28,3 @@ func IsOwnerMiddleware[domainType Userable]() func(http.Handler) http.Handler {
 		return http.HandlerFunc(hfn)
 	}
 }
-
-func (s Subscription) GetUserId() uint64 {
-	return s.UserId
-}
-*/
