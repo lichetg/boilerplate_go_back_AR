@@ -11,9 +11,9 @@ type RoomDto struct {
 
 func (d RoomDto) DomainToDto(r domain.Room) RoomDto {
 	return RoomDto{
-		Id:             d.Id,
-		OrganizationId: d.OrganizationId,
-		Name:           d.Name,
-		Description:    d.Description,
+		Id:             r.Id,
+		OrganizationId: r.OrganizationId,
+		Name:           r.Name,
+		Description:    r.Description,
 	}
 }

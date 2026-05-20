@@ -148,8 +148,8 @@ func RoomRouter(
 			roomRouter.Use(rpom)
 
 			roomRouter.Get("/", rc.Find())
-			//roomRouter.Put("/", rc.Update())
-			//roomRouter.Delete("/", rc.Delete())
+			roomRouter.Put("/", rc.Update())
+			roomRouter.Delete("/", rc.Delete())
 		})
 	})
 }

@@ -40,17 +40,17 @@ func NewRoomRepository(session db.Session) roomRepository {
 }
 
 func (r roomRepository) Save(o domain.Room) (domain.Room, error) {
-	org := r.mapDomainToModel(o)
+	rm := r.mapDomainToModel(o)
 	now := time.Now()
-	org.CreatedDate = now
-	org.UpdatedDate = now
+	rm.CreatedDate = now
+	rm.UpdatedDate = now
 
-	err := r.coll.InsertReturning(&org)
+	err := r.coll.InsertReturning(&rm)
 	if err != nil {
 		return domain.Room{}, err
 	}
 
-	o = r.mapModelToDomain(org)
+	o = r.mapModelToDomain(rm)
 	return o, nil
 }
 
@@ -96,7 +96,7 @@ func (r roomRepository) Update(o domain.Room) (domain.Room, error) {
 }
 
 func (r roomRepository) Delete(Id uint64) error {
-	return r.coll.Find(db.Cond{"Id": Id, "deleted_date": nil}).Update(map[string]interface{}{"deleted_date": time.Now()})
+	return r.coll.Find(db.Cond{"id": Id, "deleted_date": nil}).Update(map[string]interface{}{"deleted_date": time.Now()})
 }
 
 func (r roomRepository) mapDomainToModel(rm domain.Room) Room {
