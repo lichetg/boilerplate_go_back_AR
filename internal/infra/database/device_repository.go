@@ -1,30 +1,29 @@
 package database
 
 import (
+	"time"
+
 	"github.com/BohdanBoriak/boilerplate-go-back/internal/domain"
 	"github.com/upper/db/v4"
-	"time"
 )
 
 const DevicesTableName = "devices"
 
 type Device struct {
-	Id               uint64         `db:"id,omitempty"`
-	OrganizationId   uint64         `db:"organization_id"`
-	RoomId           *uint64        `db:"room_id"`
-	GUID             string         `db:"guid"`
-	InventoryNumber  string         `db:"inventory_number"`
-	SerialNumber     string         `db:"serial_number"`
-	Characteristics  string         `db:"characteristics"`
-	Category         DeviceCategory `db:"category"`
-	Units            string         `db:"units"`
-	PowerConsumption float64        `db:"power_consumption"`
-	CreatedDate      time.Time      `db:"created_date"`
-	UpdatedDate      time.Time      `db:"updated_date"`
-	DeletedDate      *time.Time     `db:"deleted_date"`
+	Id               uint64                `db:"id,omitempty"`
+	OrganizationId   uint64                `db:"organization_id"`
+	RoomId           *uint64               `db:"room_id"`
+	GUID             string                `db:"guid"`
+	InventoryNumber  string                `db:"inventory_number"`
+	SerialNumber     string                `db:"serial_number"`
+	Characteristics  string                `db:"characteristics"`
+	Category         domain.DeviceCategory `db:"category"`
+	Units            string                `db:"units"`
+	PowerConsumption float64               `db:"power_consumption"`
+	CreatedDate      time.Time             `db:"created_date"`
+	UpdatedDate      time.Time             `db:"updated_date"`
+	DeletedDate      *time.Time            `db:"deleted_date"`
 }
-
-type DeviceCategory string
 
 type DeviceRepository interface {
 	Save(o domain.Device) (domain.Device, error)
@@ -66,7 +65,7 @@ func (r deviceRepository) mapDomainToModel(dev domain.Device) Device {
 		InventoryNumber:  dev.InventoryNumber,
 		SerialNumber:     dev.SerialNumber,
 		Characteristics:  dev.Characteristics,
-		Category:         DeviceCategory(dev.Category),
+		Category:         dev.Category,
 		Units:            dev.Units,
 		PowerConsumption: dev.PowerConsumption,
 		CreatedDate:      dev.CreatedDate,
@@ -84,7 +83,7 @@ func (r deviceRepository) mapModelToDomain(dev Device) domain.Device {
 		InventoryNumber:  dev.InventoryNumber,
 		SerialNumber:     dev.SerialNumber,
 		Characteristics:  dev.Characteristics,
-		Category:         domain.DeviceCategory(dev.Category),
+		Category:         dev.Category,
 		Units:            dev.Units,
 		PowerConsumption: dev.PowerConsumption,
 		CreatedDate:      dev.CreatedDate,

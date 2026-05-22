@@ -10,14 +10,14 @@ const (
 )
 
 type DeviceRequest struct {
-	RoomId           *uint64        `json:"room_id,omitempty"`
-	GUID             string         `json:"guid"`
-	InventoryNumber  string         `json:"inventory_number"`
-	SerialNumber     string         `json:"serial_number"`
-	Characteristics  string         `json:"characteristics"`
-	Category         DeviceCategory `json:"category"`
-	Units            string         `json:"units"`
-	PowerConsumption float64        `json:"power_consumption"`
+	RoomId           *uint64               `json:"room_id,omitempty"`
+	GUID             string                `json:"guid"`
+	InventoryNumber  string                `json:"inventory_number"`
+	SerialNumber     string                `json:"serial_number"`
+	Characteristics  string                `json:"characteristics"`
+	Category         domain.DeviceCategory `json:"category"`
+	Units            string                `json:"units"`
+	PowerConsumption float64               `json:"power_consumption"`
 }
 
 func (d DeviceRequest) ToDomainModel() (interface{}, error) {
@@ -27,7 +27,7 @@ func (d DeviceRequest) ToDomainModel() (interface{}, error) {
 		InventoryNumber:  d.InventoryNumber,
 		SerialNumber:     d.SerialNumber,
 		Characteristics:  d.Characteristics,
-		Category:         DeviceCategory(d.Category),
+		Category:         d.Category,
 		Units:            d.Units,
 		PowerConsumption: d.PowerConsumption,
 	}, nil
