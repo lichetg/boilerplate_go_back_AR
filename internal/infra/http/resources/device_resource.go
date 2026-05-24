@@ -1,12 +1,15 @@
 package resources
 
-import "github.com/BohdanBoriak/boilerplate-go-back/internal/domain"
+import (
+	"github.com/BohdanBoriak/boilerplate-go-back/internal/domain"
+	"github.com/google/uuid"
+)
 
 type DeviceDto struct {
 	Id               uint64                `json:"id"`
 	OrganizationId   uint64                `json:"organization_id"`
 	RoomId           *uint64               `json:"room_id"`
-	GUID             string                `json:"guid"`
+	GUID             uuid.UUID             `json:"guid"`
 	InventoryNumber  string                `json:"inventorynumber"`
 	SerialNumber     string                `json:"serialnumber"`
 	Characteristics  string                `json:"characteristics"`

@@ -10,8 +10,7 @@ const (
 )
 
 type DeviceRequest struct {
-	RoomId           *uint64               `json:"room_id,omitempty"`
-	GUID             string                `json:"guid"`
+	RoomId           *uint64               `json:"room_id"`
 	InventoryNumber  string                `json:"inventory_number"`
 	SerialNumber     string                `json:"serial_number"`
 	Characteristics  string                `json:"characteristics"`
@@ -23,7 +22,6 @@ type DeviceRequest struct {
 func (d DeviceRequest) ToDomainModel() (interface{}, error) {
 	return domain.Device{
 		RoomId:           d.RoomId,
-		GUID:             d.GUID,
 		InventoryNumber:  d.InventoryNumber,
 		SerialNumber:     d.SerialNumber,
 		Characteristics:  d.Characteristics,

@@ -5,14 +5,15 @@ import (
 )
 
 type OrganizationDto struct {
-	Id          uint64  `json:"id"`
-	UserId      uint64  `json:"userid"`
-	Name        string  `json:"name"`
-	Description *string `json:"description,omitempty"`
-	City        string  `json:"city"`
-	Address     string  `json:"address"`
-	Lat         float64 `json:"lat"`
-	Lon         float64 `json:"lon"`
+	Id          uint64    `json:"id"`
+	UserId      uint64    `json:"userid"`
+	Name        string    `json:"name"`
+	Description *string   `json:"description,omitempty"`
+	City        string    `json:"city"`
+	Address     string    `json:"address"`
+	Lat         float64   `json:"lat"`
+	Lon         float64   `json:"lon"`
+	Rooms       []RoomDto `json:"rooms"`
 }
 
 func (d OrganizationDto) DomainToDto(o domain.Organization) OrganizationDto {
@@ -25,6 +26,7 @@ func (d OrganizationDto) DomainToDto(o domain.Organization) OrganizationDto {
 		Address:     o.Address,
 		Lat:         o.Lat,
 		Lon:         o.Lon,
+		Rooms:       RoomDto{}.RoomDomainToDtoCollection(o.Rooms),
 	}
 }
 

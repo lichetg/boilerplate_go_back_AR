@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"log"
 	"net/http"
 
@@ -43,5 +44,123 @@ func (c DeviceController) Save() http.HandlerFunc {
 		dvDto := resources.DeviceDto{}
 		dvDto = dvDto.DomainToDto(dev)
 		Success(w, dvDto)
+	}
+}
+
+func (c DeviceController) Find() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := r.Context().Value(UserKey).(domain.User)
+		org := r.Context().Value(OrgKey).(domain.Organization)
+		rm := r.Context().Value(RoomKey).(domain.Room)
+		dev := r.Context().Value(DeviceKey).(domain.Device)
+
+		if user.Id != org.UserId {
+			Forbidden(w, errors.New("access denied"))
+			return
+		}
+
+		if org.Id != rm.OrganizationId {
+			Forbidden(w, errors.New("access denied (another organization)"))
+			return
+		}
+
+		if rm.Id != *dev.RoomId {
+			Forbidden(w, errors.New("access denied (wrong room)"))
+			return
+		}
+
+		Success(w, resources.DeviceDto{}.DomainToDto(dev))
+	}
+}
+
+func (c DeviceController) Update() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := r.Context().Value(UserKey).(domain.User)
+		org := r.Context().Value(OrgKey).(domain.Organization)
+		rm := r.Context().Value(RoomKey).(domain.Room)
+		dev := r.Context().Value(DeviceKey).(domain.Device)
+
+		if user.Id != org.UserId {
+			Forbidden(w, errors.New("access denied"))
+			return
+		}
+
+		if org.Id != rm.OrganizationId {
+			Forbidden(w, errors.New("access denied (another organization)"))
+			return
+		}
+
+		if rm.Id != *dev.RoomId {
+			Forbidden(w, errors.New("access denied (wrong room)"))
+			return
+		}
+
+		newDev, err := requests.Bind(r, requests.DeviceRequest{}, domain.Device{})
+		if err != nil {
+			log.Printf("DeviceController.Update(requests.Update): %s", err)
+			BadRequest(w, err)
+			return
+		}
+
+		/*
+			Глибоко
+			if *newRoom.RoomId != rm.OrganizationId {
+				if user.Id != org.UserId {
+					Forbidden(w, errors.New("access denied"))
+					return
+				}
+				Forbidden(w, errors.New("access denied"))
+				return
+			}
+		*/
+
+		dev.RoomId = newDev.RoomId
+		dev.InventoryNumber = newDev.InventoryNumber
+		dev.SerialNumber = newDev.SerialNumber
+		dev.Characteristics = newDev.Characteristics
+		dev.Units = newDev.Units
+		dev.PowerConsumption = newDev.PowerConsumption
+
+		dev, err = c.dvService.Update(dev)
+		if err != nil {
+			log.Printf("DeviceController.Update(c.dvService.Update): %s", err)
+			InternalServerError(w, err)
+			return
+		}
+
+		Success(w, resources.RoomDto{}.DomainToDto(rm))
+	}
+}
+
+func (c DeviceController) Delete() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := r.Context().Value(UserKey).(domain.User)
+		org := r.Context().Value(OrgKey).(domain.Organization)
+		rm := r.Context().Value(RoomKey).(domain.Room)
+		dev := r.Context().Value(DeviceKey).(domain.Device)
+
+		if user.Id != org.UserId {
+			Forbidden(w, errors.New("access denied"))
+			return
+		}
+
+		if org.Id != rm.OrganizationId {
+			Forbidden(w, errors.New("access denied (another organization)"))
+			return
+		}
+
+		if rm.Id != *dev.RoomId {
+			Forbidden(w, errors.New("access denied (wrong room)"))
+			return
+		}
+
+		err := c.dvService.Delete(rm.Id)
+		if err != nil {
+			log.Printf("RoomController.Delete(c.rmService.Delete): %s", err)
+			InternalServerError(w, err)
+			return
+		}
+
+		noContent(w)
 	}
 }

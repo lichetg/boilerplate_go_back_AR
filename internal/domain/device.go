@@ -1,12 +1,15 @@
 package domain
 
-import "time"
+import (
+	"github.com/google/uuid"
+	"time"
+)
 
 type Device struct {
 	Id               uint64
 	OrganizationId   uint64
 	RoomId           *uint64
-	GUID             string
+	GUID             uuid.UUID
 	InventoryNumber  string
 	SerialNumber     string
 	Characteristics  string

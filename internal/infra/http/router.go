@@ -61,6 +61,12 @@ func Router(cont container.Container) http.Handler {
 					cont.RoomController,
 					cont.RoomService,
 					cont.OrganizationService)
+				DeviceRouter(
+					apiRouter,
+					cont.DeviceController,
+					cont.OrganizationService,
+					cont.RoomService,
+					cont.DeviceService)
 				apiRouter.Handle("/*", NotFoundJSON())
 			})
 		})
@@ -131,18 +137,11 @@ func RoomRouter(
 ) {
 	opom := middlewares.PathObject("orgId", controllers.OrgKey, os)
 	rpom := middlewares.PathObject("roomId", controllers.RoomKey, rs)
-	//omw := middlewares.IsOwnerMiddleware[domain.Ulr]()
-
-	//apiRouter.With(upom, omw).Put(
-	//	fmt.Sprintf("/{%s}", controllers.UrlURLParam),
-	//	uc.Update(),
-	//)
 
 	r.Route("/organizations/{orgId}/rooms", func(roomRouter chi.Router) {
 		roomRouter.Use(opom)
 
 		roomRouter.Post("/", rc.Save())
-		//roomRouter.Get("/", rc.FindList())
 
 		roomRouter.Route("/{roomId}", func(roomRouter chi.Router) {
 			roomRouter.Use(rpom)
@@ -150,6 +149,32 @@ func RoomRouter(
 			roomRouter.Get("/", rc.Find())
 			roomRouter.Put("/", rc.Update())
 			roomRouter.Delete("/", rc.Delete())
+		})
+	})
+}
+
+func DeviceRouter(
+	r chi.Router,
+	dc controllers.DeviceController,
+	os app.OrganizationService,
+	rs app.RoomService,
+	ds app.DeviceService,
+) {
+	//opom := middlewares.PathObject("orgId", controllers.OrgKey, os)
+	rpom := middlewares.PathObject("roomId", controllers.RoomKey, rs)
+	dpom := middlewares.PathObject("deviceId", controllers.DeviceKey, ds)
+
+	r.Route("/organizations/{orgId}/rooms/{roomId}/device", func(roomRouter chi.Router) {
+		roomRouter.Use(rpom)
+
+		roomRouter.Post("/", dc.Save())
+
+		roomRouter.Route("/{deviceId}", func(roomRouter chi.Router) {
+			roomRouter.Use(dpom)
+
+			roomRouter.Get("/", dc.Find())
+			roomRouter.Put("/", dc.Update())
+			roomRouter.Delete("/", dc.Delete())
 		})
 	})
 }

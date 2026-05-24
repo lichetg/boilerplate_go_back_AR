@@ -1,6 +1,7 @@
 package database
 
 import (
+	"github.com/google/uuid"
 	"time"
 
 	"github.com/BohdanBoriak/boilerplate-go-back/internal/domain"
@@ -13,7 +14,7 @@ type Device struct {
 	Id               uint64                `db:"id,omitempty"`
 	OrganizationId   uint64                `db:"organization_id"`
 	RoomId           *uint64               `db:"room_id"`
-	GUID             string                `db:"guid"`
+	GUID             uuid.UUID             `db:"guid"`
 	InventoryNumber  string                `db:"inventory_number"`
 	SerialNumber     string                `db:"serial_number"`
 	Characteristics  string                `db:"characteristics"`
@@ -27,6 +28,9 @@ type Device struct {
 
 type DeviceRepository interface {
 	Save(o domain.Device) (domain.Device, error)
+	Find(id uint64) (domain.Device, error)
+	Update(o domain.Device) (domain.Device, error)
+	Delete(Id uint64) error
 }
 
 type deviceRepository struct {
@@ -43,6 +47,7 @@ func NewDeviceRepository(session db.Session) deviceRepository {
 
 func (r deviceRepository) Save(o domain.Device) (domain.Device, error) {
 	dev := r.mapDomainToModel(o)
+	dev.GUID = uuid.New()
 	now := time.Now()
 	dev.CreatedDate = now
 	dev.UpdatedDate = now
@@ -54,6 +59,35 @@ func (r deviceRepository) Save(o domain.Device) (domain.Device, error) {
 
 	o = r.mapModelToDomain(dev)
 	return o, nil
+}
+
+func (r deviceRepository) Find(id uint64) (domain.Device, error) {
+	var device Device
+
+	err := r.coll.Find(db.Cond{"id": id, "deleted_date": nil}).One(&device)
+	if err != nil {
+		return domain.Device{}, err
+	}
+
+	o := r.mapModelToDomain(device)
+	return o, nil
+}
+
+func (r deviceRepository) Update(o domain.Device) (domain.Device, error) {
+	dev := r.mapDomainToModel(o)
+	dev.UpdatedDate = time.Now()
+
+	err := r.coll.Find(db.Cond{"id": o.Id, "deleted_date": nil}).Update(&dev)
+	if err != nil {
+		return domain.Device{}, err
+	}
+
+	o = r.mapModelToDomain(dev)
+	return o, nil
+}
+
+func (r deviceRepository) Delete(Id uint64) error {
+	return r.coll.Find(db.Cond{"id": Id, "deleted_date": nil}).Update(map[string]interface{}{"deleted_date": time.Now()})
 }
 
 func (r deviceRepository) mapDomainToModel(dev domain.Device) Device {
