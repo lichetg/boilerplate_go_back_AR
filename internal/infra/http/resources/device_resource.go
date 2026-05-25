@@ -14,21 +14,32 @@ type DeviceDto struct {
 	SerialNumber     string                `json:"serialnumber"`
 	Characteristics  string                `json:"characteristics"`
 	Category         domain.DeviceCategory `json:"category"`
-	Units            string                `json:"units"`
+	Units            *string               `json:"units"`
 	PowerConsumption float64               `json:"powerconsumption"`
 }
 
 func (d DeviceDto) DomainToDto(dv domain.Device) DeviceDto {
-	return DeviceDto{
-		Id:               dv.Id,
-		OrganizationId:   dv.OrganizationId,
-		RoomId:           dv.RoomId,
-		GUID:             dv.GUID,
-		InventoryNumber:  dv.InventoryNumber,
-		SerialNumber:     dv.SerialNumber,
-		Characteristics:  dv.Characteristics,
-		Category:         dv.Category,
-		Units:            dv.Units,
-		PowerConsumption: dv.PowerConsumption,
+	dto := DeviceDto{
+		Id:              dv.Id,
+		OrganizationId:  dv.OrganizationId,
+		RoomId:          dv.RoomId,
+		GUID:            dv.GUID,
+		InventoryNumber: dv.InventoryNumber,
+		SerialNumber:    dv.SerialNumber,
+		Characteristics: dv.Characteristics,
+		Category:        dv.Category,
 	}
+
+	switch dv.Category {
+	case domain.Sensor:
+		dto.PowerConsumption = dv.PowerConsumption
+		dto.Units = nil
+
+	case domain.Actuator:
+		dto.PowerConsumption = dv.PowerConsumption
+		dto.Units = dv.Units
+
+	}
+
+	return dto
 }

@@ -15,7 +15,7 @@ type DeviceRequest struct {
 	SerialNumber     string                `json:"serial_number"`
 	Characteristics  string                `json:"characteristics"`
 	Category         domain.DeviceCategory `json:"category"`
-	Units            string                `json:"units"`
+	Units            *string               `json:"units"`
 	PowerConsumption float64               `json:"power_consumption"`
 }
 

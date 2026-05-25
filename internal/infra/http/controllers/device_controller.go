@@ -13,11 +13,13 @@ import (
 
 type DeviceController struct {
 	dvService app.DeviceService
+	rmService app.RoomService
 }
 
-func NewDeviceController(ds app.DeviceService) DeviceController {
+func NewDeviceController(ds app.DeviceService, rm app.RoomService) DeviceController {
 	return DeviceController{
 		dvService: ds,
+		rmService: rm,
 	}
 }
 
@@ -33,6 +35,26 @@ func (c DeviceController) Save() http.HandlerFunc {
 
 		org := r.Context().Value(OrgKey).(domain.Organization)
 		dev.OrganizationId = org.Id
+
+		if dev.RoomId != nil {
+			room, err := c.rmService.Find(*dev.RoomId)
+			if err != nil {
+				log.Printf("DeviceController.Update(c.rmService.Find): %s", err)
+				BadRequest(w, errors.New("room not found"))
+				return
+			}
+
+			rm, ok := room.(domain.Room)
+			if !ok {
+				InternalServerError(w, errors.New("invalid room type"))
+				return
+			}
+
+			if rm.OrganizationId != org.Id {
+				Forbidden(w, errors.New("room does not belong to organization"))
+				return
+			}
+		}
 
 		dev, err = c.dvService.Save(dev)
 		if err != nil {
@@ -90,17 +112,25 @@ func (c DeviceController) Update() http.HandlerFunc {
 			return
 		}
 
-		/*
-			Глибоко
-			if *newRoom.RoomId != rm.OrganizationId {
-				if user.Id != org.UserId {
-					Forbidden(w, errors.New("access denied"))
-					return
-				}
-				Forbidden(w, errors.New("access denied"))
+		if newDev.RoomId != nil {
+			room, err := c.rmService.Find(*newDev.RoomId)
+			if err != nil {
+				log.Printf("DeviceController.Update(c.rmService.Find): %s", err)
+				BadRequest(w, errors.New("room not found"))
 				return
 			}
-		*/
+
+			rm, ok := room.(domain.Room)
+			if !ok {
+				InternalServerError(w, errors.New("invalid room type"))
+				return
+			}
+
+			if rm.OrganizationId != org.Id {
+				Forbidden(w, errors.New("room does not belong to organization"))
+				return
+			}
+		}
 
 		dev.RoomId = newDev.RoomId
 		dev.InventoryNumber = newDev.InventoryNumber

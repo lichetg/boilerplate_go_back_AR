@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"github.com/BohdanBoriak/boilerplate-go-back/internal/domain"
 	"github.com/BohdanBoriak/boilerplate-go-back/internal/infra/database"
 	"log"
@@ -25,7 +26,17 @@ func NewDeviceService(
 }
 
 func (s deviceService) Save(o domain.Device) (domain.Device, error) {
+
+	if o.Category == domain.Actuator {
+		if o.Units == nil || *o.Units == "" {
+			return domain.Device{}, errors.New("units is required for actuator")
+		}
+	} else {
+		o.Units = nil
+	}
+
 	dv, err := s.devRepo.Save(o)
+
 	if err != nil {
 		log.Printf("deviceService.Save(s.devRepo.Save): %s", err)
 		return domain.Device{}, err

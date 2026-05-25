@@ -20,7 +20,7 @@ type Device struct {
 	SerialNumber     string                `db:"serial_number"`
 	Characteristics  string                `db:"characteristics"`
 	Category         domain.DeviceCategory `db:"category"`
-	Units            string                `db:"units"`
+	Units            *string               `db:"units"`
 	PowerConsumption float64               `db:"power_consumption"`
 	CreatedDate      time.Time             `db:"created_date"`
 	UpdatedDate      time.Time             `db:"updated_date"`

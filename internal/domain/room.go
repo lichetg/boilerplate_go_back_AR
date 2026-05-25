@@ -7,6 +7,7 @@ type Room struct {
 	OrganizationId uint64
 	Name           string
 	Description    *string
+	Device         []Device
 	CreatedDate    time.Time
 	UpdatedDate    time.Time
 	DeletedDate    *time.Time

@@ -14,7 +14,7 @@ type Device struct {
 	SerialNumber     string
 	Characteristics  string
 	Category         DeviceCategory
-	Units            string
+	Units            *string
 	PowerConsumption float64
 	CreatedDate      time.Time
 	UpdatedDate      time.Time
