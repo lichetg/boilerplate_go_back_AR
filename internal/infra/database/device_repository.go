@@ -1,8 +1,9 @@
 package database
 
 import (
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/BohdanBoriak/boilerplate-go-back/internal/domain"
 	"github.com/upper/db/v4"

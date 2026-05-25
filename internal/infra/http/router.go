@@ -65,7 +65,6 @@ func Router(cont container.Container) http.Handler {
 					apiRouter,
 					cont.DeviceController,
 					cont.OrganizationService,
-					cont.RoomService,
 					cont.DeviceService)
 				apiRouter.Handle("/*", NotFoundJSON())
 			})
@@ -157,24 +156,23 @@ func DeviceRouter(
 	r chi.Router,
 	dc controllers.DeviceController,
 	os app.OrganizationService,
-	rs app.RoomService,
 	ds app.DeviceService,
 ) {
-	//opom := middlewares.PathObject("orgId", controllers.OrgKey, os)
-	rpom := middlewares.PathObject("roomId", controllers.RoomKey, rs)
+
+	opom := middlewares.PathObject("orgId", controllers.OrgKey, os)
 	dpom := middlewares.PathObject("deviceId", controllers.DeviceKey, ds)
 
-	r.Route("/organizations/{orgId}/rooms/{roomId}/device", func(roomRouter chi.Router) {
-		roomRouter.Use(rpom)
+	r.Route("/organizations/{orgId}/device", func(deviceRouter chi.Router) {
+		deviceRouter.Use(opom)
 
-		roomRouter.Post("/", dc.Save())
+		deviceRouter.Post("/", dc.Save())
 
-		roomRouter.Route("/{deviceId}", func(roomRouter chi.Router) {
-			roomRouter.Use(dpom)
+		deviceRouter.Route("/{deviceId}", func(deviceRouter chi.Router) {
+			deviceRouter.Use(dpom)
 
-			roomRouter.Get("/", dc.Find())
-			roomRouter.Put("/", dc.Update())
-			roomRouter.Delete("/", dc.Delete())
+			deviceRouter.Get("/", dc.Find())
+			deviceRouter.Put("/", dc.Update())
+			deviceRouter.Delete("/", dc.Delete())
 		})
 	})
 }

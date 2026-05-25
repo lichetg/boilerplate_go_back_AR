@@ -31,8 +31,8 @@ func (c DeviceController) Save() http.HandlerFunc {
 
 		}
 
-		rm := r.Context().Value(RoomKey).(domain.Room)
-		dev.RoomId = &rm.Id
+		org := r.Context().Value(OrgKey).(domain.Organization)
+		dev.OrganizationId = org.Id
 
 		dev, err = c.dvService.Save(dev)
 		if err != nil {
@@ -51,7 +51,6 @@ func (c DeviceController) Find() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value(UserKey).(domain.User)
 		org := r.Context().Value(OrgKey).(domain.Organization)
-		rm := r.Context().Value(RoomKey).(domain.Room)
 		dev := r.Context().Value(DeviceKey).(domain.Device)
 
 		if user.Id != org.UserId {
@@ -59,13 +58,8 @@ func (c DeviceController) Find() http.HandlerFunc {
 			return
 		}
 
-		if org.Id != rm.OrganizationId {
+		if org.Id != dev.OrganizationId {
 			Forbidden(w, errors.New("access denied (another organization)"))
-			return
-		}
-
-		if rm.Id != *dev.RoomId {
-			Forbidden(w, errors.New("access denied (wrong room)"))
 			return
 		}
 
@@ -77,7 +71,6 @@ func (c DeviceController) Update() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value(UserKey).(domain.User)
 		org := r.Context().Value(OrgKey).(domain.Organization)
-		rm := r.Context().Value(RoomKey).(domain.Room)
 		dev := r.Context().Value(DeviceKey).(domain.Device)
 
 		if user.Id != org.UserId {
@@ -85,13 +78,8 @@ func (c DeviceController) Update() http.HandlerFunc {
 			return
 		}
 
-		if org.Id != rm.OrganizationId {
+		if org.Id != dev.OrganizationId {
 			Forbidden(w, errors.New("access denied (another organization)"))
-			return
-		}
-
-		if rm.Id != *dev.RoomId {
-			Forbidden(w, errors.New("access denied (wrong room)"))
 			return
 		}
 
@@ -128,7 +116,7 @@ func (c DeviceController) Update() http.HandlerFunc {
 			return
 		}
 
-		Success(w, resources.RoomDto{}.DomainToDto(rm))
+		Success(w, resources.DeviceDto{}.DomainToDto(dev))
 	}
 }
 
@@ -136,7 +124,6 @@ func (c DeviceController) Delete() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value(UserKey).(domain.User)
 		org := r.Context().Value(OrgKey).(domain.Organization)
-		rm := r.Context().Value(RoomKey).(domain.Room)
 		dev := r.Context().Value(DeviceKey).(domain.Device)
 
 		if user.Id != org.UserId {
@@ -144,19 +131,14 @@ func (c DeviceController) Delete() http.HandlerFunc {
 			return
 		}
 
-		if org.Id != rm.OrganizationId {
+		if org.Id != dev.OrganizationId {
 			Forbidden(w, errors.New("access denied (another organization)"))
 			return
 		}
 
-		if rm.Id != *dev.RoomId {
-			Forbidden(w, errors.New("access denied (wrong room)"))
-			return
-		}
-
-		err := c.dvService.Delete(rm.Id)
+		err := c.dvService.Delete(dev.Id)
 		if err != nil {
-			log.Printf("RoomController.Delete(c.rmService.Delete): %s", err)
+			log.Printf("DeviceController.Delete(c.dvService.Delete): %s", err)
 			InternalServerError(w, err)
 			return
 		}
