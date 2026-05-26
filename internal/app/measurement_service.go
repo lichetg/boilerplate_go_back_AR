@@ -12,6 +12,7 @@ type measurementService struct {
 
 type MeasurementService interface {
 	Save(o domain.Measurement) (domain.Measurement, error)
+	Find(id uint64) (interface{}, error)
 }
 
 func NewMeasurementService(

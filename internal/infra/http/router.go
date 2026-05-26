@@ -190,15 +190,15 @@ func MeasurementRouter(
 ) {
 
 	dpom := middlewares.PathObject("deviceId", controllers.DeviceKey, ds)
-	//mpom := middlewares.PathObject("measId", controllers.MeasKey, ms)
+	mpom := middlewares.PathObject("measId", controllers.MeasKey, ms)
 
 	r.Route("/organizations/{orgId}/device/{deviceId}/measurement", func(measurementRouter chi.Router) {
-		//measurementRouter.Use(mpom)
+		measurementRouter.Use(dpom)
 
 		measurementRouter.Post("/", mc.Save())
 
-		measurementRouter.Route("/{deviceId}", func(measurementRouter chi.Router) {
-			measurementRouter.Use(dpom)
+		measurementRouter.Route("/{measId}", func(measurementRouter chi.Router) {
+			measurementRouter.Use(mpom)
 
 			//	measurementRouter.Get("/", mc.Find())
 			//	measurementRouter.Put("/", mc.Update())

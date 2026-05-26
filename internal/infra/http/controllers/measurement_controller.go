@@ -12,11 +12,13 @@ import (
 
 type MeasurementController struct {
 	msService app.MeasurementService
+	dvService app.DeviceService
 }
 
-func NewMeasurementController(mss app.MeasurementService) MeasurementController {
+func NewMeasurementController(mss app.MeasurementService, dvs app.DeviceService) MeasurementController {
 	return MeasurementController{
 		msService: mss,
+		dvService: dvs,
 	}
 }
 
@@ -49,6 +51,24 @@ func (c MeasurementController) Find() http.HandlerFunc {
 		org := r.Context().Value(OrgKey).(domain.Organization)
 		dv := r.Context().Value(DeviceKey).(domain.Device)
 		meas := r.Context().Value(MeasKey).(domain.Measurement)
+
+		dev, err := c.dvService.Find(dv.Id)
+		if err != nil {
+			Forbidden(w, errors.New("access denied"))
+			return
+		}
+
+		device := dev.(domain.Device)
+
+		if device.Id != meas.DeviceId {
+			Forbidden(w, errors.New("access denied"))
+			return
+		}
+
+		if dv.Category != domain.Actuator {
+			Forbidden(w, errors.New("access denied"))
+			return
+		}
 
 		if user.Id != org.UserId {
 			Forbidden(w, errors.New("access denied"))
