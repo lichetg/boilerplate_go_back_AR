@@ -65,7 +65,7 @@ func New(conf config.Configuration) Container {
 	organizationController := controllers.NewOrganizationController(organizationService)
 	roomController := controllers.NewRoomController(roomService)
 	deviceController := controllers.NewDeviceController(deviceService, roomService)
-	measurementController := controllers.NewMeasurementController(measurementService, deviceService)
+	measurementController := controllers.NewMeasurementController(measurementService, deviceService, roomService)
 
 	authMiddleware := middlewares.AuthMiddleware(tknAuth, authService, userService)
 

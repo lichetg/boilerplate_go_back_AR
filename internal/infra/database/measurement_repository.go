@@ -20,6 +20,8 @@ type measurement struct {
 type MeasurementRepository interface {
 	Save(o domain.Measurement) (domain.Measurement, error)
 	Find(id uint64) (domain.Measurement, error)
+	Update(o domain.Measurement) (domain.Measurement, error)
+	Delete(id uint64) error
 }
 type measurementRepository struct {
 	coll db.Collection
@@ -58,6 +60,23 @@ func (r measurementRepository) Find(id uint64) (domain.Measurement, error) {
 
 	o := r.mapModelToDomain(meas)
 	return o, nil
+}
+
+func (r measurementRepository) Update(o domain.Measurement) (domain.Measurement, error) {
+	meas := r.mapDomainToModel(o)
+	meas.UpdatedDate = time.Now()
+
+	err := r.coll.Find(db.Cond{"id": o.Id, "deleted_date": nil}).Update(&meas)
+	if err != nil {
+		return domain.Measurement{}, err
+	}
+
+	o = r.mapModelToDomain(meas)
+	return o, nil
+}
+
+func (r measurementRepository) Delete(Id uint64) error {
+	return r.coll.Find(db.Cond{"id": Id, "deleted_date": nil}).Update(map[string]interface{}{"deleted_date": time.Now()})
 }
 
 func (r measurementRepository) mapDomainToModel(rm domain.Measurement) measurement {

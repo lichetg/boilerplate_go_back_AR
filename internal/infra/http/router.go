@@ -69,6 +69,7 @@ func Router(cont container.Container) http.Handler {
 				MeasurementRouter(
 					apiRouter,
 					cont.MeasurementController,
+					cont.OrganizationService,
 					cont.DeviceService,
 					cont.MeasurementService)
 				apiRouter.Handle("/*", NotFoundJSON())
@@ -185,24 +186,27 @@ func DeviceRouter(
 func MeasurementRouter(
 	r chi.Router,
 	mc controllers.MeasurementController,
+	os app.OrganizationService,
 	ds app.DeviceService,
 	ms app.MeasurementService,
 ) {
 
+	opom := middlewares.PathObject("orgId", controllers.OrgKey, os)
 	dpom := middlewares.PathObject("deviceId", controllers.DeviceKey, ds)
 	mpom := middlewares.PathObject("measId", controllers.MeasKey, ms)
 
 	r.Route("/organizations/{orgId}/device/{deviceId}/measurement", func(measurementRouter chi.Router) {
 		measurementRouter.Use(dpom)
+		measurementRouter.Use(opom)
 
 		measurementRouter.Post("/", mc.Save())
 
 		measurementRouter.Route("/{measId}", func(measurementRouter chi.Router) {
 			measurementRouter.Use(mpom)
 
-			//	measurementRouter.Get("/", mc.Find())
-			//	measurementRouter.Put("/", mc.Update())
-			//	measurementRouter.Delete("/", mc.Delete())
+			measurementRouter.Get("/", mc.Find())
+			measurementRouter.Put("/", mc.Update())
+			measurementRouter.Delete("/", mc.Delete())
 		})
 	})
 }

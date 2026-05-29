@@ -13,17 +13,22 @@ import (
 type MeasurementController struct {
 	msService app.MeasurementService
 	dvService app.DeviceService
+	rmService app.RoomService
 }
 
-func NewMeasurementController(mss app.MeasurementService, dvs app.DeviceService) MeasurementController {
+func NewMeasurementController(mss app.MeasurementService, dvs app.DeviceService, rms app.RoomService) MeasurementController {
 	return MeasurementController{
 		msService: mss,
 		dvService: dvs,
+		rmService: rms,
 	}
 }
 
 func (c MeasurementController) Save() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		org := r.Context().Value(OrgKey).(domain.Organization)
+		dev := r.Context().Value(DeviceKey).(domain.Device)
+
 		meas, err := requests.Bind(r, requests.MeasurementRequest{}, domain.Measurement{})
 		if err != nil {
 			log.Printf("MeasurementController.Save(requests.Bind): %s", err)
@@ -31,6 +36,13 @@ func (c MeasurementController) Save() http.HandlerFunc {
 			return
 
 		}
+
+		if dev.OrganizationId != org.Id {
+			BadRequest(w, errors.New("Organization ID does not match"))
+			return
+		}
+
+		meas.DeviceId = dev.Id
 
 		meas, err = c.msService.Save(meas)
 		if err != nil {
@@ -52,26 +64,13 @@ func (c MeasurementController) Find() http.HandlerFunc {
 		dv := r.Context().Value(DeviceKey).(domain.Device)
 		meas := r.Context().Value(MeasKey).(domain.Measurement)
 
-		dev, err := c.dvService.Find(dv.Id)
-		if err != nil {
-			Forbidden(w, errors.New("access denied"))
-			return
-		}
-
-		device := dev.(domain.Device)
-
-		if device.Id != meas.DeviceId {
-			Forbidden(w, errors.New("access denied"))
-			return
-		}
-
-		if dv.Category != domain.Actuator {
-			Forbidden(w, errors.New("access denied"))
-			return
-		}
-
 		if user.Id != org.UserId {
 			Forbidden(w, errors.New("access denied"))
+			return
+		}
+
+		if org.Id != dv.OrganizationId {
+			Forbidden(w, errors.New("wrong organization"))
 			return
 		}
 
@@ -81,5 +80,97 @@ func (c MeasurementController) Find() http.HandlerFunc {
 		}
 
 		Success(w, resources.MeasurementDto{}.DomainToDto(meas))
+	}
+}
+
+// TODO: Додати перевірку на збіжність roomId - device та roomId - measurement
+func (c MeasurementController) Update() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := r.Context().Value(UserKey).(domain.User)
+		org := r.Context().Value(OrgKey).(domain.Organization)
+		dev := r.Context().Value(DeviceKey).(domain.Device)
+		meas := r.Context().Value(MeasKey).(domain.Measurement)
+
+		if user.Id != org.UserId {
+			Forbidden(w, errors.New("access denied"))
+			return
+		}
+
+		if org.Id != dev.OrganizationId {
+			Forbidden(w, errors.New("access denied (another organization)"))
+			return
+		}
+
+		newMeas, err := requests.Bind(r, requests.MeasurementRequest{}, domain.Measurement{})
+		if err != nil {
+			log.Printf("MeasurementController.Update(requests.Update): %s", err)
+			BadRequest(w, err)
+			return
+		}
+
+		if newMeas.RoomId != nil {
+			room, err := c.rmService.Find(*newMeas.RoomId)
+			if err != nil {
+				log.Printf("MeasurementController.Update(c.rmService.Find): %s", err)
+				BadRequest(w, errors.New("room not found"))
+				return
+			}
+
+			rm, ok := room.(domain.Room)
+			if !ok {
+				InternalServerError(w, errors.New("invalid room type"))
+				return
+			}
+
+			if rm.OrganizationId != org.Id {
+				Forbidden(w, errors.New("room does not belong to organization"))
+				return
+			}
+		}
+
+		meas.RoomId = newMeas.RoomId
+		meas.Value = newMeas.Value
+
+		meas, err = c.msService.Update(meas)
+		if err != nil {
+			log.Printf("MeasurementController.Update(c.msService.Update): %s", err)
+			InternalServerError(w, err)
+			return
+		}
+
+		Success(w, resources.MeasurementDto{}.DomainToDto(meas))
+	}
+}
+
+func (c MeasurementController) Delete() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := r.Context().Value(UserKey).(domain.User)
+		org := r.Context().Value(OrgKey).(domain.Organization)
+		dev := r.Context().Value(DeviceKey).(domain.Device)
+		meas := r.Context().Value(MeasKey).(domain.Measurement)
+
+		if user.Id != org.UserId {
+			Forbidden(w, errors.New("access denied"))
+			return
+		}
+
+		if org.Id != dev.OrganizationId {
+			Forbidden(w, errors.New("access denied (another organization)"))
+			return
+		}
+
+		if dev.Id != meas.DeviceId {
+			Forbidden(w, errors.New("access denied (another device)"))
+			return
+		}
+
+		err := c.msService.Delete(meas.Id)
+		if err != nil {
+			log.Printf("MeasurementController.Delete(c.msService.Delete): %s", err)
+			InternalServerError(w, err)
+			return
+		}
+
+		noContent(w)
 	}
 }
