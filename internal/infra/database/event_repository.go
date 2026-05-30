@@ -19,6 +19,10 @@ type Event struct {
 }
 
 type EventRepository interface {
+	Save(o domain.Event) (domain.Event, error)
+	Find(id uint64) (domain.Event, error)
+	Update(o domain.Event) (domain.Event, error)
+	Delete(Id uint64) error
 }
 
 type eventRepository struct {
@@ -45,6 +49,35 @@ func (r eventRepository) Save(o domain.Event) (domain.Event, error) {
 
 	o = r.mapModelToDomain(eve)
 	return o, nil
+}
+
+func (r eventRepository) Find(id uint64) (domain.Event, error) {
+	var event Event
+
+	err := r.coll.Find(db.Cond{"id": id, "deleted_date": nil}).One(&event)
+	if err != nil {
+		return domain.Event{}, err
+	}
+
+	o := r.mapModelToDomain(event)
+	return o, nil
+}
+
+func (r eventRepository) Update(o domain.Event) (domain.Event, error) {
+	eve := r.mapDomainToModel(o)
+	eve.UpdatedDate = time.Now()
+
+	err := r.coll.Find(db.Cond{"id": o.Id, "deleted_date": nil}).Update(&eve)
+	if err != nil {
+		return domain.Event{}, err
+	}
+
+	o = r.mapModelToDomain(eve)
+	return o, nil
+}
+
+func (r eventRepository) Delete(Id uint64) error {
+	return r.coll.Find(db.Cond{"id": Id, "deleted_date": nil}).Update(map[string]interface{}{"deleted_date": time.Now()})
 }
 
 func (r eventRepository) mapDomainToModel(eve domain.Event) Event {

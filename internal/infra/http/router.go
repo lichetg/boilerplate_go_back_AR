@@ -72,6 +72,12 @@ func Router(cont container.Container) http.Handler {
 					cont.OrganizationService,
 					cont.DeviceService,
 					cont.MeasurementService)
+				EventRouter(
+					apiRouter,
+					cont.EventController,
+					cont.OrganizationService,
+					cont.DeviceService,
+					cont.EventService)
 				apiRouter.Handle("/*", NotFoundJSON())
 			})
 		})
@@ -207,6 +213,34 @@ func MeasurementRouter(
 			measurementRouter.Get("/", mc.Find())
 			measurementRouter.Put("/", mc.Update())
 			measurementRouter.Delete("/", mc.Delete())
+		})
+	})
+}
+
+func EventRouter(
+	r chi.Router,
+	ec controllers.EventController,
+	os app.OrganizationService,
+	ds app.DeviceService,
+	es app.EventService,
+) {
+
+	opom := middlewares.PathObject("orgId", controllers.OrgKey, os)
+	dpom := middlewares.PathObject("deviceId", controllers.DeviceKey, ds)
+	epom := middlewares.PathObject("eventId", controllers.EventKey, es)
+
+	r.Route("/organizations/{orgId}/device/{deviceId}/event", func(eventRouter chi.Router) {
+		eventRouter.Use(dpom)
+		eventRouter.Use(opom)
+
+		eventRouter.Post("/", ec.Save())
+
+		eventRouter.Route("/{eventId}", func(eventRouter chi.Router) {
+			eventRouter.Use(epom)
+
+			eventRouter.Get("/", ec.Find())
+			eventRouter.Put("/", ec.Update())
+			eventRouter.Delete("/", ec.Delete())
 		})
 	})
 }

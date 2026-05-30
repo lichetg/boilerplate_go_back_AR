@@ -15,6 +15,7 @@ type CtxKey struct {
 }
 
 var (
+	EventKey  = CtxKey{"event"}
 	MeasKey   = CtxKey{Name: "measurement"}
 	DeviceKey = CtxKey{Name: "device"}
 	RoomKey   = CtxKey{Name: "room"}

@@ -35,13 +35,13 @@ func (s measurementService) Save(o domain.Measurement) (domain.Measurement, erro
 }
 
 func (s measurementService) Find(id uint64) (interface{}, error) {
-	rm, err := s.measRepo.Find(id)
+	meas, err := s.measRepo.Find(id)
 	if err != nil {
 		log.Printf("roomService.Find(s.measRepo.Find): %s", err)
 		return nil, err
 	}
 
-	return rm, nil
+	return meas, nil
 }
 
 func (s measurementService) Update(o domain.Measurement) (domain.Measurement, error) {

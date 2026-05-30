@@ -10,29 +10,27 @@ import (
 	"net/http"
 )
 
-type MeasurementController struct {
-	msService app.MeasurementService
-	dvService app.DeviceService
+type EventController struct {
+	evService app.EventService
 	rmService app.RoomService
 }
 
-func NewMeasurementController(mss app.MeasurementService, dvs app.DeviceService, rms app.RoomService) MeasurementController {
-	return MeasurementController{
-		msService: mss,
-		dvService: dvs,
+func NewEventController(evs app.EventService, rms app.RoomService) EventController {
+	return EventController{
+		evService: evs,
 		rmService: rms,
 	}
 }
 
-func (c MeasurementController) Save() http.HandlerFunc {
+func (c EventController) Save() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value(UserKey).(domain.User)
 		org := r.Context().Value(OrgKey).(domain.Organization)
 		dev := r.Context().Value(DeviceKey).(domain.Device)
 
-		meas, err := requests.Bind(r, requests.MeasurementRequest{}, domain.Measurement{})
+		eve, err := requests.Bind(r, requests.EventRequest{}, domain.Event{})
 		if err != nil {
-			log.Printf("MeasurementController.Save(requests.Bind): %s", err)
+			log.Printf("EventController.Save(requests.Bind): %s", err)
 			BadRequest(w, err)
 			return
 
@@ -47,37 +45,36 @@ func (c MeasurementController) Save() http.HandlerFunc {
 			return
 		}
 
-		if meas.RoomId != dev.RoomId {
+		if *eve.RoomId != *dev.RoomId {
 			Forbidden(w, errors.New("access denied (wrong room)"))
 			return
 		}
 
-		if dev.Category != domain.Actuator {
+		if dev.Category != domain.Sensor {
 			Forbidden(w, errors.New("access denied (wrong device category)"))
 			return
 		}
+		eve.DeviceId = dev.Id
 
-		meas.DeviceId = dev.Id
-
-		meas, err = c.msService.Save(meas)
+		eve, err = c.evService.Save(eve)
 		if err != nil {
-			log.Printf("MeasurementController.Save(c.msService.Save): %s", err)
+			log.Printf("EventController.Save(c.evService.Save): %s", err)
 			InternalServerError(w, err)
 			return
 		}
 
-		mssDto := resources.MeasurementDto{}
-		mssDto = mssDto.DomainToDto(meas)
-		Success(w, mssDto)
+		eveDto := resources.EventDto{}
+		eveDto = eveDto.DomainToDto(eve)
+		Success(w, eveDto)
 	}
 }
 
-func (c MeasurementController) Find() http.HandlerFunc {
+func (c EventController) Find() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value(UserKey).(domain.User)
 		org := r.Context().Value(OrgKey).(domain.Organization)
 		dv := r.Context().Value(DeviceKey).(domain.Device)
-		meas := r.Context().Value(MeasKey).(domain.Measurement)
+		eve := r.Context().Value(EventKey).(domain.Event)
 
 		if user.Id != org.UserId {
 			Forbidden(w, errors.New("access denied"))
@@ -89,21 +86,21 @@ func (c MeasurementController) Find() http.HandlerFunc {
 			return
 		}
 
-		if dv.Id != meas.DeviceId {
+		if dv.Id != eve.DeviceId {
 			Forbidden(w, errors.New("wrong device"))
 			return
 		}
 
-		Success(w, resources.MeasurementDto{}.DomainToDto(meas))
+		Success(w, resources.EventDto{}.DomainToDto(eve))
 	}
 }
 
-func (c MeasurementController) Update() http.HandlerFunc {
+func (c EventController) Update() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value(UserKey).(domain.User)
 		org := r.Context().Value(OrgKey).(domain.Organization)
 		dev := r.Context().Value(DeviceKey).(domain.Device)
-		meas := r.Context().Value(MeasKey).(domain.Measurement)
+		eve := r.Context().Value(EventKey).(domain.Event)
 
 		if user.Id != org.UserId {
 			Forbidden(w, errors.New("access denied"))
@@ -115,27 +112,27 @@ func (c MeasurementController) Update() http.HandlerFunc {
 			return
 		}
 
-		if dev.Category != domain.Actuator {
+		if dev.Category != domain.Sensor {
 			Forbidden(w, errors.New("access denied (wrong device category)"))
 			return
 		}
 
-		newMeas, err := requests.Bind(r, requests.MeasurementRequest{}, domain.Measurement{})
+		newEve, err := requests.Bind(r, requests.EventRequest{}, domain.Event{})
 		if err != nil {
-			log.Printf("MeasurementController.Update(requests.Update): %s", err)
+			log.Printf("EventController.Update(requests.Update): %s", err)
 			BadRequest(w, err)
 			return
 		}
 
-		if newMeas.RoomId != dev.RoomId {
+		if *newEve.RoomId != *dev.RoomId {
 			Forbidden(w, errors.New("wrong room"))
 			return
 		}
 
-		if newMeas.RoomId != nil {
-			room, err := c.rmService.Find(*newMeas.RoomId)
+		if newEve.RoomId != nil {
+			room, err := c.rmService.Find(*newEve.RoomId)
 			if err != nil {
-				log.Printf("MeasurementController.Update(c.rmService.Find): %s", err)
+				log.Printf("EventController.Update(c.evService.Find): %s", err)
 				BadRequest(w, errors.New("room not found"))
 				return
 			}
@@ -152,26 +149,26 @@ func (c MeasurementController) Update() http.HandlerFunc {
 			}
 		}
 
-		meas.RoomId = newMeas.RoomId
-		meas.Value = newMeas.Value
+		eve.RoomId = newEve.RoomId
+		eve.Action = newEve.Action
 
-		meas, err = c.msService.Update(meas)
+		eve, err = c.evService.Update(eve)
 		if err != nil {
-			log.Printf("MeasurementController.Update(c.msService.Update): %s", err)
+			log.Printf("EventController.Update(c.evService.Update): %s", err)
 			InternalServerError(w, err)
 			return
 		}
 
-		Success(w, resources.MeasurementDto{}.DomainToDto(meas))
+		Success(w, resources.EventDto{}.DomainToDto(eve))
 	}
 }
 
-func (c MeasurementController) Delete() http.HandlerFunc {
+func (c EventController) Delete() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value(UserKey).(domain.User)
 		org := r.Context().Value(OrgKey).(domain.Organization)
 		dev := r.Context().Value(DeviceKey).(domain.Device)
-		meas := r.Context().Value(MeasKey).(domain.Measurement)
+		eve := r.Context().Value(EventKey).(domain.Event)
 
 		if user.Id != org.UserId {
 			Forbidden(w, errors.New("access denied"))
@@ -183,14 +180,14 @@ func (c MeasurementController) Delete() http.HandlerFunc {
 			return
 		}
 
-		if dev.Id != meas.DeviceId {
+		if dev.Id != eve.DeviceId {
 			Forbidden(w, errors.New("access denied (another device)"))
 			return
 		}
 
-		err := c.msService.Delete(meas.Id)
+		err := c.evService.Delete(eve.Id)
 		if err != nil {
-			log.Printf("MeasurementController.Delete(c.msService.Delete): %s", err)
+			log.Printf("EventController.Delete(c.evService.Delete): %s", err)
 			InternalServerError(w, err)
 			return
 		}
