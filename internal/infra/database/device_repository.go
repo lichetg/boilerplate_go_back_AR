@@ -30,6 +30,7 @@ type Device struct {
 type DeviceRepository interface {
 	Save(o domain.Device) (domain.Device, error)
 	Find(id uint64) (domain.Device, error)
+	FindList(orgId uint64) ([]domain.Device, error)
 	Update(o domain.Device) (domain.Device, error)
 	Delete(Id uint64) error
 }
@@ -72,6 +73,23 @@ func (r deviceRepository) Find(id uint64) (domain.Device, error) {
 
 	o := r.mapModelToDomain(device)
 	return o, nil
+}
+
+func (r deviceRepository) FindList(orgId uint64) ([]domain.Device, error) {
+	var devs []Device
+
+	err := r.coll.
+		Find(db.Cond{
+			"organization_id": orgId,
+			"deleted_date":    nil,
+		}).
+		All(&devs)
+	if err != nil {
+		return nil, err
+	}
+
+	organizations := r.mapModelToDomainCollection(devs)
+	return organizations, nil
 }
 
 func (r deviceRepository) Update(o domain.Device) (domain.Device, error) {
@@ -125,4 +143,12 @@ func (r deviceRepository) mapModelToDomain(dev Device) domain.Device {
 		UpdatedDate:      dev.UpdatedDate,
 		DeletedDate:      dev.DeletedDate,
 	}
+}
+
+func (r deviceRepository) mapModelToDomainCollection(devs []Device) []domain.Device {
+	devices := make([]domain.Device, len(devs))
+	for i := range devs {
+		devices[i] = r.mapModelToDomain(devs[i])
+	}
+	return devices
 }

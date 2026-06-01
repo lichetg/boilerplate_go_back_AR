@@ -4,6 +4,7 @@ import (
 	"github.com/BohdanBoriak/boilerplate-go-back/internal/domain"
 	"github.com/BohdanBoriak/boilerplate-go-back/internal/infra/database"
 	"log"
+	"time"
 )
 
 type measurementService struct {
@@ -15,6 +16,10 @@ type MeasurementService interface {
 	Find(id uint64) (interface{}, error)
 	Update(o domain.Measurement) (domain.Measurement, error)
 	Delete(id uint64) error
+
+	GetDay(deviceId uint64) ([]domain.Measurement, error)
+	GetWeek(deviceId uint64) ([]domain.Measurement, error)
+	GetMonth(deviceId uint64) ([]domain.Measurement, error)
 }
 
 func NewMeasurementService(
@@ -62,4 +67,43 @@ func (s measurementService) Delete(id uint64) error {
 	}
 
 	return nil
+}
+
+func (s measurementService) GetDay(deviceId uint64) ([]domain.Measurement, error) {
+
+	now := time.Now()
+
+	from := now.AddDate(0, 0, -1)
+
+	return s.measRepo.FindByDeviceAndPeriod(
+		deviceId,
+		from,
+		now,
+	)
+}
+
+func (s measurementService) GetWeek(deviceId uint64) ([]domain.Measurement, error) {
+
+	now := time.Now()
+
+	from := now.AddDate(0, 0, -7)
+
+	return s.measRepo.FindByDeviceAndPeriod(
+		deviceId,
+		from,
+		now,
+	)
+}
+
+func (s measurementService) GetMonth(deviceId uint64) ([]domain.Measurement, error) {
+
+	now := time.Now()
+
+	from := now.AddDate(0, -1, 0)
+
+	return s.measRepo.FindByDeviceAndPeriod(
+		deviceId,
+		from,
+		now,
+	)
 }

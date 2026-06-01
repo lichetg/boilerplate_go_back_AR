@@ -60,7 +60,7 @@ func New(conf config.Configuration) Container {
 	authService := app.NewAuthService(sessionRepository, userRepository, tknAuth, conf.JwtTTL)
 	organizationService := app.NewOrganizationService(organizationRepository, roomRepository)
 	roomService := app.NewRoomService(roomRepository)
-	deviceService := app.NewDeviceService(deviceRepository)
+	deviceService := app.NewDeviceService(deviceRepository, measurementRepository, eventRepository)
 	measurementService := app.NewMeasurementService(measurementRepository)
 	eventService := app.NewEventService(eventRepository)
 

@@ -207,6 +207,10 @@ func MeasurementRouter(
 
 		measurementRouter.Post("/", mc.Save())
 
+		measurementRouter.Get("/day", mc.Day())
+		measurementRouter.Get("/week", mc.Weak())
+		measurementRouter.Get("/month", mc.Month())
+
 		measurementRouter.Route("/{measId}", func(measurementRouter chi.Router) {
 			measurementRouter.Use(mpom)
 
@@ -234,6 +238,10 @@ func EventRouter(
 		eventRouter.Use(opom)
 
 		eventRouter.Post("/", ec.Save())
+
+		eventRouter.Get("/day", ec.Day())
+		eventRouter.Get("/week", ec.Weak())
+		eventRouter.Get("/month", ec.Month())
 
 		eventRouter.Route("/{eventId}", func(eventRouter chi.Router) {
 			eventRouter.Use(epom)

@@ -4,6 +4,7 @@ import (
 	"github.com/BohdanBoriak/boilerplate-go-back/internal/domain"
 	"github.com/BohdanBoriak/boilerplate-go-back/internal/infra/database"
 	"log"
+	"time"
 )
 
 type eventService struct {
@@ -15,6 +16,10 @@ type EventService interface {
 	Find(id uint64) (interface{}, error)
 	Update(o domain.Event) (domain.Event, error)
 	Delete(id uint64) error
+
+	GetDay(deviceId uint64) ([]domain.Event, error)
+	GetWeak(deviceId uint64) ([]domain.Event, error)
+	GetMonth(deviceId uint64) ([]domain.Event, error)
 }
 
 func NewEventService(
@@ -62,4 +67,43 @@ func (s eventService) Delete(id uint64) error {
 	}
 
 	return nil
+}
+
+func (s eventService) GetDay(deviceId uint64) ([]domain.Event, error) {
+
+	now := time.Now()
+
+	from := now.AddDate(0, 0, -1)
+
+	return s.eveRepo.FindByDeviceAndPeriod(
+		deviceId,
+		from,
+		now,
+	)
+}
+
+func (s eventService) GetWeak(deviceId uint64) ([]domain.Event, error) {
+
+	now := time.Now()
+
+	from := now.AddDate(0, 0, -7)
+
+	return s.eveRepo.FindByDeviceAndPeriod(
+		deviceId,
+		from,
+		now,
+	)
+}
+
+func (s eventService) GetMonth(deviceId uint64) ([]domain.Event, error) {
+
+	now := time.Now()
+
+	from := now.AddDate(0, -1, 0)
+
+	return s.eveRepo.FindByDeviceAndPeriod(
+		deviceId,
+		from,
+		now,
+	)
 }

@@ -195,3 +195,87 @@ func (c EventController) Delete() http.HandlerFunc {
 		noContent(w)
 	}
 }
+
+func (c EventController) Day() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := r.Context().Value(UserKey).(domain.User)
+		org := r.Context().Value(OrgKey).(domain.Organization)
+		device := r.Context().Value(DeviceKey).(domain.Device)
+
+		if user.Id != org.UserId {
+			Forbidden(w, errors.New("access denied"))
+			return
+		}
+
+		if org.Id != device.OrganizationId {
+			Forbidden(w, errors.New("access denied (another organization)"))
+			return
+		}
+
+		eve, err := c.evService.GetDay(device.Id)
+
+		if err != nil {
+			log.Printf("EventController.Day(c.evService.GetDay): %s", err)
+			InternalServerError(w, err)
+			return
+		}
+
+		Success(w, resources.EventDto{}.EventDomainToDtoCollection(eve))
+	}
+}
+
+func (c EventController) Weak() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := r.Context().Value(UserKey).(domain.User)
+		org := r.Context().Value(OrgKey).(domain.Organization)
+		device := r.Context().Value(DeviceKey).(domain.Device)
+
+		if user.Id != org.UserId {
+			Forbidden(w, errors.New("access denied"))
+			return
+		}
+
+		if org.Id != device.OrganizationId {
+			Forbidden(w, errors.New("access denied (another organization)"))
+			return
+		}
+
+		eve, err := c.evService.GetWeak(device.Id)
+
+		if err != nil {
+			log.Printf("EventController.Weak(c.evService.GetWeak): %s", err)
+			InternalServerError(w, err)
+			return
+		}
+
+		Success(w, resources.EventDto{}.EventDomainToDtoCollection(eve))
+	}
+}
+
+func (c EventController) Month() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := r.Context().Value(UserKey).(domain.User)
+		org := r.Context().Value(OrgKey).(domain.Organization)
+		device := r.Context().Value(DeviceKey).(domain.Device)
+
+		if user.Id != org.UserId {
+			Forbidden(w, errors.New("access denied"))
+			return
+		}
+
+		if org.Id != device.OrganizationId {
+			Forbidden(w, errors.New("access denied (another organization)"))
+			return
+		}
+
+		eve, err := c.evService.GetMonth(device.Id)
+
+		if err != nil {
+			log.Printf("EventController.Month(c.evService.GetMount): %s", err)
+			InternalServerError(w, err)
+			return
+		}
+
+		Success(w, resources.EventDto{}.EventDomainToDtoCollection(eve))
+	}
+}

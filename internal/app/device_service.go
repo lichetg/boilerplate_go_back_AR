@@ -8,7 +8,9 @@ import (
 )
 
 type deviceService struct {
-	devRepo database.DeviceRepository
+	devRepo  database.DeviceRepository
+	measRepo database.MeasurementRepository
+	eveRepo  database.EventRepository
 }
 
 type DeviceService interface {
@@ -19,9 +21,13 @@ type DeviceService interface {
 }
 
 func NewDeviceService(
-	dr database.DeviceRepository) DeviceService {
+	dr database.DeviceRepository,
+	mr database.MeasurementRepository,
+	er database.EventRepository) DeviceService {
 	return deviceService{
-		devRepo: dr,
+		devRepo:  dr,
+		measRepo: mr,
+		eveRepo:  er,
 	}
 }
 
@@ -46,13 +52,25 @@ func (s deviceService) Save(o domain.Device) (domain.Device, error) {
 }
 
 func (s deviceService) Find(id uint64) (interface{}, error) {
-	rm, err := s.devRepo.Find(id)
+	dev, err := s.devRepo.Find(id)
 	if err != nil {
 		log.Printf("deviceService.Find(s.devRepo.Find): %s", err)
 		return nil, err
 	}
 
-	return rm, nil
+	dev.Measurements, err = s.measRepo.FindByDeviceId(dev.Id)
+	if err != nil {
+		log.Printf("deviceService.Find(s.measRepo.FindByDeviceId): %s", err)
+		return nil, err
+	}
+
+	dev.Events, err = s.eveRepo.FindByDeviceId(dev.Id)
+	if err != nil {
+		log.Printf("deviceService.Find(s.eveRepo.FindBiDeviceId): %s", err)
+		return nil, err
+	}
+
+	return dev, nil
 }
 
 func (s deviceService) Update(o domain.Device) (domain.Device, error) {

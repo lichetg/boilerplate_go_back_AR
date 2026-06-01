@@ -16,6 +16,8 @@ type DeviceDto struct {
 	Category         domain.DeviceCategory `json:"category"`
 	Units            *string               `json:"units"`
 	PowerConsumption float64               `json:"powerconsumption"`
+	Measurements     []MeasurementDto      `json:"measurements"`
+	Events           []EventDto            `json:"events"`
 }
 
 func (d DeviceDto) DomainToDto(dv domain.Device) DeviceDto {
@@ -28,6 +30,8 @@ func (d DeviceDto) DomainToDto(dv domain.Device) DeviceDto {
 		SerialNumber:    dv.SerialNumber,
 		Characteristics: dv.Characteristics,
 		Category:        dv.Category,
+		Measurements:    MeasurementDto{}.MeasurementDomainToDtoCollection(dv.Measurements),
+		Events:          EventDto{}.EventDomainToDtoCollection(dv.Events),
 	}
 
 	switch dv.Category {
@@ -42,4 +46,12 @@ func (d DeviceDto) DomainToDto(dv domain.Device) DeviceDto {
 	}
 
 	return dto
+}
+
+func (d DeviceDto) DeviceDomainToDtoCollection(dvs []domain.Device) []DeviceDto {
+	dvsDto := make([]DeviceDto, len(dvs))
+	for i, _ := range dvs {
+		dvsDto[i] = d.DomainToDto(dvs[i])
+	}
+	return dvsDto
 }

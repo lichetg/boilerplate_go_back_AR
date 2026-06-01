@@ -47,8 +47,8 @@ func (c MeasurementController) Save() http.HandlerFunc {
 			return
 		}
 
-		if meas.RoomId != dev.RoomId {
-			Forbidden(w, errors.New("access denied (wrong room)"))
+		if *meas.RoomId != *dev.RoomId {
+			Forbidden(w, errors.New("wrong room"))
 			return
 		}
 
@@ -196,5 +196,89 @@ func (c MeasurementController) Delete() http.HandlerFunc {
 		}
 
 		noContent(w)
+	}
+}
+
+func (c MeasurementController) Day() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := r.Context().Value(UserKey).(domain.User)
+		org := r.Context().Value(OrgKey).(domain.Organization)
+		device := r.Context().Value(DeviceKey).(domain.Device)
+
+		if user.Id != org.UserId {
+			Forbidden(w, errors.New("access denied"))
+			return
+		}
+
+		if org.Id != device.OrganizationId {
+			Forbidden(w, errors.New("access denied (another organization)"))
+			return
+		}
+
+		meas, err := c.msService.GetDay(device.Id)
+
+		if err != nil {
+			log.Printf("MeasurementController.Day(c.msService.GetDay): %s", err)
+			InternalServerError(w, err)
+			return
+		}
+
+		Success(w, resources.MeasurementDto{}.MeasurementDomainToDtoCollection(meas))
+	}
+}
+
+func (c MeasurementController) Weak() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := r.Context().Value(UserKey).(domain.User)
+		org := r.Context().Value(OrgKey).(domain.Organization)
+		device := r.Context().Value(DeviceKey).(domain.Device)
+
+		if user.Id != org.UserId {
+			Forbidden(w, errors.New("access denied"))
+			return
+		}
+
+		if org.Id != device.OrganizationId {
+			Forbidden(w, errors.New("access denied (another organization)"))
+			return
+		}
+
+		meas, err := c.msService.GetWeek(device.Id)
+
+		if err != nil {
+			log.Printf("MeasurementController.Weak(c.msService.GetWeak): %s", err)
+			InternalServerError(w, err)
+			return
+		}
+
+		Success(w, resources.MeasurementDto{}.MeasurementDomainToDtoCollection(meas))
+	}
+}
+
+func (c MeasurementController) Month() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := r.Context().Value(UserKey).(domain.User)
+		org := r.Context().Value(OrgKey).(domain.Organization)
+		device := r.Context().Value(DeviceKey).(domain.Device)
+
+		if user.Id != org.UserId {
+			Forbidden(w, errors.New("access denied"))
+			return
+		}
+
+		if org.Id != device.OrganizationId {
+			Forbidden(w, errors.New("access denied (another organization)"))
+			return
+		}
+
+		meas, err := c.msService.GetMonth(device.Id)
+
+		if err != nil {
+			log.Printf("MeasurementController.Month(c.msService.GetMonth): %s", err)
+			InternalServerError(w, err)
+			return
+		}
+
+		Success(w, resources.MeasurementDto{}.MeasurementDomainToDtoCollection(meas))
 	}
 }
