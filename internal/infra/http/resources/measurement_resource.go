@@ -13,6 +13,12 @@ type MeasurementDto struct {
 	UpdatedDate time.Time `json:"updatedDate"`
 }
 
+type Measurements struct {
+	Items []domain.Measurement `json:"items"`
+	Total uint64               `json:"total"`
+	Pages uint                 `json:"pages"`
+}
+
 func (d MeasurementDto) DomainToDto(ms domain.Measurement) MeasurementDto {
 	return MeasurementDto{
 		Id:          ms.Id,

@@ -2,8 +2,10 @@ package database
 
 import (
 	"github.com/BohdanBoriak/boilerplate-go-back/internal/domain"
+	"github.com/BohdanBoriak/boilerplate-go-back/internal/infra/http/resources"
 	"github.com/upper/db/v4"
 	"log"
+	"math"
 	"time"
 )
 
@@ -21,10 +23,10 @@ type Measurement struct {
 type MeasurementRepository interface {
 	Save(o domain.Measurement) (domain.Measurement, error)
 	Find(id uint64) (domain.Measurement, error)
+	FindByDeviceId(devId uint64) ([]domain.Measurement, error)
 	Update(o domain.Measurement) (domain.Measurement, error)
 	Delete(id uint64) error
-	FindByDeviceAndPeriod(id uint64, from time.Time, to time.Time) ([]domain.Measurement, error)
-	FindByDeviceId(devId uint64) ([]domain.Measurement, error)
+	FindList(p domain.Pagination, f domain.MeasurementFilters) (resources.Measurements, error)
 }
 type measurementRepository struct {
 	coll db.Collection
@@ -82,33 +84,79 @@ func (r measurementRepository) FindByDeviceId(devId uint64) ([]domain.Measuremen
 	return o, nil
 }
 
-func (r measurementRepository) FindByDeviceAndPeriod(
-	id uint64,
-	from time.Time,
-	to time.Time,
-) ([]domain.Measurement, error) {
-	var meas []Measurement
+func (r measurementRepository) FindList(
+	p domain.Pagination,
+	f domain.MeasurementFilters,
+) (resources.Measurements, error) {
 
-	err := r.coll.Find(
+	var models []Measurement
+
+	if p.Page == 0 {
+		p.Page = 1
+	}
+
+	if p.CountPerPage == 0 {
+		p.CountPerPage = 20
+	}
+
+	query := r.coll.Find(
 		db.Cond{
-			"device_id":       id,
-			"created_date >=": from,
-			"created_date <=": to,
-			"deleted_date":    nil,
+			"device_id":    f.DeviceId,
+			"deleted_date": nil,
 		},
-	).All(&meas)
+	)
 
+	if f.CreatedDateFrom != nil {
+		query = query.And("created_date >= ?", *f.CreatedDateFrom)
+	}
+
+	if f.CreatedDateTo != nil {
+		query = query.And("created_date <= ?", *f.CreatedDateTo)
+	}
+
+	switch f.Sort {
+
+	case "created_date":
+		query = query.OrderBy("created_date")
+
+	case "-created_date":
+		query = query.OrderBy("-created_date")
+
+	case "value":
+		query = query.OrderBy("value")
+
+	case "-value":
+		query = query.OrderBy("-value")
+
+	default:
+		query = query.OrderBy("-created_date")
+	}
+
+	result := query.Paginate(uint(p.CountPerPage))
+
+	err := result.Page(uint(p.Page)).All(&models)
 	if err != nil {
-		return nil, err
+		return resources.Measurements{}, err
 	}
 
-	measurements := make([]domain.Measurement, len(meas))
-
-	for i, m := range meas {
-		measurements[i] = r.mapModelToDomain(m)
+	total, err := result.TotalEntries()
+	if err != nil {
+		return resources.Measurements{}, err
 	}
 
-	return measurements, nil
+	items := make([]domain.Measurement, len(models))
+
+	for i, m := range models {
+		items[i] = r.mapModelToDomain(m)
+	}
+
+	return resources.Measurements{
+		Items: items,
+		Total: total,
+		Pages: uint(math.Ceil(
+			float64(total) / float64(p.CountPerPage),
+		)),
+	}, nil
 }
 
 func (r measurementRepository) Update(o domain.Measurement) (domain.Measurement, error) {

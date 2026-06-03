@@ -13,6 +13,12 @@ type EventDto struct {
 	UpdatedDate time.Time `json:"updated_date"`
 }
 
+type Events struct {
+	Items []domain.Event `json:"items"`
+	Total uint64         `json:"total"`
+	Pages uint64         `json:"pages"`
+}
+
 func (d EventDto) DomainToDto(ev domain.Event) EventDto {
 	return EventDto{
 		Id:          ev.Id,

@@ -2,7 +2,9 @@ package database
 
 import (
 	"github.com/BohdanBoriak/boilerplate-go-back/internal/domain"
+	"github.com/BohdanBoriak/boilerplate-go-back/internal/infra/http/resources"
 	"github.com/upper/db/v4"
+	"math"
 	"time"
 )
 
@@ -21,9 +23,9 @@ type Event struct {
 type EventRepository interface {
 	Save(o domain.Event) (domain.Event, error)
 	Find(id uint64) (domain.Event, error)
+	FindList(p domain.Pagination, f domain.EventFilters) (resources.Events, error)
 	Update(o domain.Event) (domain.Event, error)
 	Delete(Id uint64) error
-	FindByDeviceAndPeriod(id uint64, from time.Time, to time.Time) ([]domain.Event, error)
 	FindByDeviceId(devId uint64) ([]domain.Event, error)
 }
 
@@ -65,6 +67,80 @@ func (r eventRepository) Find(id uint64) (domain.Event, error) {
 	return o, nil
 }
 
+func (r eventRepository) FindList(
+	p domain.Pagination,
+	f domain.EventFilters,
+) (resources.Events, error) {
+
+	var models []Event
+
+	if p.Page == 0 {
+		p.Page = 1
+	}
+
+	if p.CountPerPage == 0 {
+		p.CountPerPage = 20
+	}
+
+	query := r.coll.Find(
+		db.Cond{
+			"device_id":    f.DeviceId,
+			"deleted_date": nil,
+		},
+	)
+
+	if f.CreatedDateFrom != nil {
+		query = query.And("created_date >= ?", *f.CreatedDateFrom)
+	}
+
+	if f.CreatedDateTo != nil {
+		query = query.And("created_date <= ?", *f.CreatedDateTo)
+	}
+
+	switch f.Sort {
+
+	case "created_date":
+		query = query.OrderBy("created_date")
+
+	case "-created_date":
+		query = query.OrderBy("-created_date")
+
+	case "action":
+		query = query.OrderBy("action")
+
+	case "-action":
+		query = query.OrderBy("-action")
+
+	default:
+		query = query.OrderBy("-created_date")
+	}
+
+	result := query.Paginate(uint(p.CountPerPage))
+
+	err := result.Page(uint(p.Page)).All(&models)
+	if err != nil {
+		return resources.Events{}, err
+	}
+
+	total, err := result.TotalEntries()
+	if err != nil {
+		return resources.Events{}, err
+	}
+
+	items := make([]domain.Event, len(models))
+
+	for i, m := range models {
+		items[i] = r.mapModelToDomain(m)
+	}
+
+	return resources.Events{
+		Items: items,
+		Total: total,
+		Pages: uint64(math.Ceil(
+			float64(total) / float64(p.CountPerPage),
+		)),
+	}, nil
+}
 func (r eventRepository) FindByDeviceId(devId uint64) ([]domain.Event, error) {
 	var eves []Event
 
@@ -96,35 +172,6 @@ func (r eventRepository) Update(o domain.Event) (domain.Event, error) {
 
 func (r eventRepository) Delete(Id uint64) error {
 	return r.coll.Find(db.Cond{"id": Id, "deleted_date": nil}).Update(map[string]interface{}{"deleted_date": time.Now()})
-}
-
-func (r eventRepository) FindByDeviceAndPeriod(
-	id uint64,
-	from time.Time,
-	to time.Time,
-) ([]domain.Event, error) {
-	var eves []Event
-
-	err := r.coll.Find(
-		db.Cond{
-			"device_id":       id,
-			"created_date >=": from,
-			"created_date <=": to,
-			"deleted_date":    nil,
-		},
-	).All(&eves)
-
-	if err != nil {
-		return nil, err
-	}
-
-	events := make([]domain.Event, len(eves))
-
-	for i, m := range eves {
-		events[i] = r.mapModelToDomain(m)
-	}
-
-	return events, nil
 }
 
 func (r eventRepository) mapDomainToModel(eve domain.Event) Event {

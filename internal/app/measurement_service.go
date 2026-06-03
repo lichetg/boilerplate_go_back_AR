@@ -3,8 +3,8 @@ package app
 import (
 	"github.com/BohdanBoriak/boilerplate-go-back/internal/domain"
 	"github.com/BohdanBoriak/boilerplate-go-back/internal/infra/database"
+	"github.com/BohdanBoriak/boilerplate-go-back/internal/infra/http/resources"
 	"log"
-	"time"
 )
 
 type measurementService struct {
@@ -14,12 +14,9 @@ type measurementService struct {
 type MeasurementService interface {
 	Save(o domain.Measurement) (domain.Measurement, error)
 	Find(id uint64) (interface{}, error)
+	FindList(p domain.Pagination, f domain.MeasurementFilters) (resources.Measurements, error)
 	Update(o domain.Measurement) (domain.Measurement, error)
 	Delete(id uint64) error
-
-	GetDay(deviceId uint64) ([]domain.Measurement, error)
-	GetWeek(deviceId uint64) ([]domain.Measurement, error)
-	GetMonth(deviceId uint64) ([]domain.Measurement, error)
 }
 
 func NewMeasurementService(
@@ -49,6 +46,16 @@ func (s measurementService) Find(id uint64) (interface{}, error) {
 	return meas, nil
 }
 
+func (s measurementService) FindList(p domain.Pagination, f domain.MeasurementFilters) (resources.Measurements, error) {
+	meass, err := s.measRepo.FindList(p, f)
+	if err != nil {
+		log.Printf("measurementService.FindList(s.measRepo.FindList): %s", err)
+		return resources.Measurements{}, err
+	}
+
+	return meass, nil
+}
+
 func (s measurementService) Update(o domain.Measurement) (domain.Measurement, error) {
 	meas, err := s.measRepo.Update(o)
 	if err != nil {
@@ -67,43 +74,4 @@ func (s measurementService) Delete(id uint64) error {
 	}
 
 	return nil
-}
-
-func (s measurementService) GetDay(deviceId uint64) ([]domain.Measurement, error) {
-
-	now := time.Now()
-
-	from := now.AddDate(0, 0, -1)
-
-	return s.measRepo.FindByDeviceAndPeriod(
-		deviceId,
-		from,
-		now,
-	)
-}
-
-func (s measurementService) GetWeek(deviceId uint64) ([]domain.Measurement, error) {
-
-	now := time.Now()
-
-	from := now.AddDate(0, 0, -7)
-
-	return s.measRepo.FindByDeviceAndPeriod(
-		deviceId,
-		from,
-		now,
-	)
-}
-
-func (s measurementService) GetMonth(deviceId uint64) ([]domain.Measurement, error) {
-
-	now := time.Now()
-
-	from := now.AddDate(0, -1, 0)
-
-	return s.measRepo.FindByDeviceAndPeriod(
-		deviceId,
-		from,
-		now,
-	)
 }
