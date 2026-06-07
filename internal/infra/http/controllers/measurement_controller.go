@@ -30,7 +30,7 @@ func (c MeasurementController) Save() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value(UserKey).(domain.User)
 		org := r.Context().Value(OrgKey).(domain.Organization)
-		dev := r.Context().Value(DeviceKey).(domain.Device)
+		dev := r.Context().Value(DeviceGUIDKey).(domain.Device)
 
 		meas, err := requests.Bind(r, requests.MeasurementRequest{}, domain.Measurement{})
 		if err != nil {
@@ -78,7 +78,7 @@ func (c MeasurementController) Find() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value(UserKey).(domain.User)
 		org := r.Context().Value(OrgKey).(domain.Organization)
-		dv := r.Context().Value(DeviceKey).(domain.Device)
+		dev := r.Context().Value(DeviceGUIDKey).(domain.Device)
 		meas := r.Context().Value(MeasKey).(domain.Measurement)
 
 		if user.Id != org.UserId {
@@ -86,12 +86,12 @@ func (c MeasurementController) Find() http.HandlerFunc {
 			return
 		}
 
-		if org.Id != dv.OrganizationId {
+		if org.Id != dev.OrganizationId {
 			Forbidden(w, errors.New("wrong organization"))
 			return
 		}
 
-		if dv.Id != meas.DeviceId {
+		if dev.Id != meas.DeviceId {
 			Forbidden(w, errors.New("wrong device"))
 			return
 		}
@@ -104,19 +104,19 @@ func (c MeasurementController) FindList() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value(UserKey).(domain.User)
 		org := r.Context().Value(OrgKey).(domain.Organization)
-		device := r.Context().Value(DeviceKey).(domain.Device)
+		dev := r.Context().Value(DeviceGUIDKey).(domain.Device)
 
 		if user.Id != org.UserId {
 			Forbidden(w, errors.New("access denied"))
 			return
 		}
 
-		if org.Id != device.OrganizationId {
+		if org.Id != dev.OrganizationId {
 			Forbidden(w, errors.New("wrong organization"))
 			return
 		}
 
-		if device.Category != domain.Actuator {
+		if dev.Category != domain.Actuator {
 			Forbidden(w, errors.New("access denied (wrong device category)"))
 			return
 		}
@@ -169,7 +169,7 @@ func (c MeasurementController) FindList() http.HandlerFunc {
 				CountPerPage: uint64(countPerPage),
 			},
 			domain.MeasurementFilters{
-				DeviceId:        device.Id,
+				DeviceId:        dev.Id,
 				CreatedDateFrom: from,
 				CreatedDateTo:   to,
 				Sort:            sort,
@@ -189,7 +189,7 @@ func (c MeasurementController) Update() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value(UserKey).(domain.User)
 		org := r.Context().Value(OrgKey).(domain.Organization)
-		dev := r.Context().Value(DeviceKey).(domain.Device)
+		dev := r.Context().Value(DeviceGUIDKey).(domain.Device)
 		meas := r.Context().Value(MeasKey).(domain.Measurement)
 
 		if user.Id != org.UserId {
@@ -257,7 +257,7 @@ func (c MeasurementController) Delete() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value(UserKey).(domain.User)
 		org := r.Context().Value(OrgKey).(domain.Organization)
-		dev := r.Context().Value(DeviceKey).(domain.Device)
+		dev := r.Context().Value(DeviceGUIDKey).(domain.Device)
 		meas := r.Context().Value(MeasKey).(domain.Measurement)
 
 		if user.Id != org.UserId {

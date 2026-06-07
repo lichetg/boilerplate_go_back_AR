@@ -28,7 +28,7 @@ func (c EventController) Save() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value(UserKey).(domain.User)
 		org := r.Context().Value(OrgKey).(domain.Organization)
-		dev := r.Context().Value(DeviceKey).(domain.Device)
+		dev := r.Context().Value(DeviceGUIDKey).(domain.Device)
 
 		eve, err := requests.Bind(r, requests.EventRequest{}, domain.Event{})
 		if err != nil {
@@ -75,7 +75,7 @@ func (c EventController) Find() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value(UserKey).(domain.User)
 		org := r.Context().Value(OrgKey).(domain.Organization)
-		dv := r.Context().Value(DeviceKey).(domain.Device)
+		dev := r.Context().Value(DeviceGUIDKey).(domain.Device)
 		eve := r.Context().Value(EventKey).(domain.Event)
 
 		if user.Id != org.UserId {
@@ -83,12 +83,12 @@ func (c EventController) Find() http.HandlerFunc {
 			return
 		}
 
-		if org.Id != dv.OrganizationId {
+		if org.Id != dev.OrganizationId {
 			Forbidden(w, errors.New("wrong organization"))
 			return
 		}
 
-		if dv.Id != eve.DeviceId {
+		if dev.Id != eve.DeviceId {
 			Forbidden(w, errors.New("wrong device"))
 			return
 		}
@@ -101,18 +101,18 @@ func (c EventController) FindList() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value(UserKey).(domain.User)
 		org := r.Context().Value(OrgKey).(domain.Organization)
-		device := r.Context().Value(DeviceKey).(domain.Device)
+		dev := r.Context().Value(DeviceGUIDKey).(domain.Device)
 
 		if user.Id != org.UserId {
 			Forbidden(w, errors.New("access denied"))
 		}
 
-		if device.OrganizationId != org.Id {
+		if dev.OrganizationId != org.Id {
 			Forbidden(w, errors.New("access denied (wrong organization)"))
 			return
 		}
 
-		if device.Category != domain.Sensor {
+		if dev.Category != domain.Sensor {
 			Forbidden(w, errors.New("access denied (wrong device category)"))
 			return
 		}
@@ -165,7 +165,7 @@ func (c EventController) FindList() http.HandlerFunc {
 				CountPerPage: uint64(countPerPage),
 			},
 			domain.EventFilters{
-				DeviceId:        device.Id,
+				DeviceId:        dev.Id,
 				CreatedDateFrom: from,
 				CreatedDateTo:   to,
 				Sort:            sort,
@@ -185,7 +185,7 @@ func (c EventController) Update() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value(UserKey).(domain.User)
 		org := r.Context().Value(OrgKey).(domain.Organization)
-		dev := r.Context().Value(DeviceKey).(domain.Device)
+		dev := r.Context().Value(DeviceGUIDKey).(domain.Device)
 		eve := r.Context().Value(EventKey).(domain.Event)
 
 		if user.Id != org.UserId {
@@ -253,7 +253,7 @@ func (c EventController) Delete() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value(UserKey).(domain.User)
 		org := r.Context().Value(OrgKey).(domain.Organization)
-		dev := r.Context().Value(DeviceKey).(domain.Device)
+		dev := r.Context().Value(DeviceGUIDKey).(domain.Device)
 		eve := r.Context().Value(EventKey).(domain.Event)
 
 		if user.Id != org.UserId {

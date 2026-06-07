@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/BohdanBoriak/boilerplate-go-back/internal/domain"
 	"github.com/BohdanBoriak/boilerplate-go-back/internal/infra/database"
+	"github.com/google/uuid"
 	"log"
 )
 
@@ -16,6 +17,7 @@ type deviceService struct {
 type DeviceService interface {
 	Save(o domain.Device) (domain.Device, error)
 	Find(id uint64) (interface{}, error)
+	FindGUID(GUID uuid.UUID) (interface{}, error)
 	Update(o domain.Device) (domain.Device, error)
 	Delete(id uint64) error
 }
@@ -53,6 +55,28 @@ func (s deviceService) Save(o domain.Device) (domain.Device, error) {
 
 func (s deviceService) Find(id uint64) (interface{}, error) {
 	dev, err := s.devRepo.Find(id)
+	if err != nil {
+		log.Printf("deviceService.Find(s.devRepo.Find): %s", err)
+		return nil, err
+	}
+
+	dev.Measurements, err = s.measRepo.FindByDeviceId(dev.Id)
+	if err != nil {
+		log.Printf("deviceService.Find(s.measRepo.FindByDeviceId): %s", err)
+		return nil, err
+	}
+
+	dev.Events, err = s.eveRepo.FindByDeviceId(dev.Id)
+	if err != nil {
+		log.Printf("deviceService.Find(s.eveRepo.FindBiDeviceId): %s", err)
+		return nil, err
+	}
+
+	return dev, nil
+}
+
+func (s deviceService) FindGUID(guid uuid.UUID) (interface{}, error) {
+	dev, err := s.devRepo.FindGUID(guid)
 	if err != nil {
 		log.Printf("deviceService.Find(s.devRepo.Find): %s", err)
 		return nil, err

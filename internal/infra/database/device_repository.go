@@ -30,6 +30,7 @@ type Device struct {
 type DeviceRepository interface {
 	Save(o domain.Device) (domain.Device, error)
 	Find(id uint64) (domain.Device, error)
+	FindGUID(GUID uuid.UUID) (domain.Device, error)
 	FindList(orgId uint64) ([]domain.Device, error)
 	Update(o domain.Device) (domain.Device, error)
 	Delete(Id uint64) error
@@ -67,6 +68,18 @@ func (r deviceRepository) Find(id uint64) (domain.Device, error) {
 	var device Device
 
 	err := r.coll.Find(db.Cond{"id": id, "deleted_date": nil}).One(&device)
+	if err != nil {
+		return domain.Device{}, err
+	}
+
+	o := r.mapModelToDomain(device)
+	return o, nil
+}
+
+func (r deviceRepository) FindGUID(guid uuid.UUID) (domain.Device, error) {
+	var device Device
+
+	err := r.coll.Find(db.Cond{"guid": guid, "deleted_date": nil}).One(&device)
 	if err != nil {
 		return domain.Device{}, err
 	}

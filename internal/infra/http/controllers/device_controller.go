@@ -73,7 +73,7 @@ func (c DeviceController) Find() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value(UserKey).(domain.User)
 		org := r.Context().Value(OrgKey).(domain.Organization)
-		dev := r.Context().Value(DeviceKey).(domain.Device)
+		dev := r.Context().Value(DeviceGUIDKey).(domain.Device)
 
 		if user.Id != org.UserId {
 			Forbidden(w, errors.New("access denied"))
@@ -93,7 +93,7 @@ func (c DeviceController) Update() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value(UserKey).(domain.User)
 		org := r.Context().Value(OrgKey).(domain.Organization)
-		dev := r.Context().Value(DeviceKey).(domain.Device)
+		dev := r.Context().Value(DeviceGUIDKey).(domain.Device)
 
 		if user.Id != org.UserId {
 			Forbidden(w, errors.New("access denied"))
@@ -154,7 +154,7 @@ func (c DeviceController) Delete() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := r.Context().Value(UserKey).(domain.User)
 		org := r.Context().Value(OrgKey).(domain.Organization)
-		dev := r.Context().Value(DeviceKey).(domain.Device)
+		dev := r.Context().Value(DeviceGUIDKey).(domain.Device)
 
 		if user.Id != org.UserId {
 			Forbidden(w, errors.New("access denied"))

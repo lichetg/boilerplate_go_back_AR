@@ -172,14 +172,14 @@ func DeviceRouter(
 ) {
 
 	opom := middlewares.PathObject("orgId", controllers.OrgKey, os)
-	dpom := middlewares.PathObject("deviceId", controllers.DeviceKey, ds)
+	dpom := middlewares.PathObjectUUID("deviceUUId", controllers.DeviceGUIDKey, ds)
 
 	r.Route("/organizations/{orgId}/device", func(deviceRouter chi.Router) {
 		deviceRouter.Use(opom)
 
 		deviceRouter.Post("/", dc.Save())
 
-		deviceRouter.Route("/{deviceId}", func(deviceRouter chi.Router) {
+		deviceRouter.Route("/{deviceUUId}", func(deviceRouter chi.Router) {
 			deviceRouter.Use(dpom)
 
 			deviceRouter.Get("/", dc.Find())
@@ -198,12 +198,12 @@ func MeasurementRouter(
 ) {
 
 	opom := middlewares.PathObject("orgId", controllers.OrgKey, os)
-	dpom := middlewares.PathObject("deviceId", controllers.DeviceKey, ds)
+	dpom := middlewares.PathObjectUUID("deviceUUId", controllers.DeviceGUIDKey, ds)
 	mpom := middlewares.PathObject("measId", controllers.MeasKey, ms)
 
-	r.Route("/organizations/{orgId}/device/{deviceId}/measurement", func(measurementRouter chi.Router) {
-		measurementRouter.Use(dpom)
+	r.Route("/organizations/{orgId}/device/{deviceUUId}/measurement", func(measurementRouter chi.Router) {
 		measurementRouter.Use(opom)
+		measurementRouter.Use(dpom)
 
 		measurementRouter.Post("/", mc.Save())
 		measurementRouter.Get("/", mc.FindList())
@@ -227,15 +227,14 @@ func EventRouter(
 ) {
 
 	opom := middlewares.PathObject("orgId", controllers.OrgKey, os)
-	dpom := middlewares.PathObject("deviceId", controllers.DeviceKey, ds)
+	dpom := middlewares.PathObjectUUID("deviceUUId", controllers.DeviceGUIDKey, ds)
 	epom := middlewares.PathObject("eventId", controllers.EventKey, es)
 
-	r.Route("/organizations/{orgId}/device/{deviceId}/event", func(eventRouter chi.Router) {
-		eventRouter.Use(dpom)
+	r.Route("/organizations/{orgId}/device/{deviceUUId}/event", func(eventRouter chi.Router) {
 		eventRouter.Use(opom)
+		eventRouter.Use(dpom)
 
 		eventRouter.Post("/", ec.Save())
-
 		eventRouter.Get("/", ec.FindList())
 
 		eventRouter.Route("/{eventId}", func(eventRouter chi.Router) {
